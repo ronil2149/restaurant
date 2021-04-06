@@ -55,7 +55,7 @@ exports.cooklogin = (req, res, next) => {
     Cook.findOne({ $or: [{ email: email }] })
         .then(cook => {
             if (!cook) {
-                const error = new Error('A cook with this email could not be found.');
+                const error = new Error('A cook with this email could  be found.');
                 error.statusCode = 401;
                 throw error;
             }
@@ -193,7 +193,7 @@ exports.cookreset = (req, res, next) => {
     OTP.findOne({ ot: otp1 })
         .then(ot => {
             if (!ot) {
-                const error = new Error('An otp could not be found');
+                const error = new Error('An otp could  be found');
                 error.statusCode = 404;
                 res.json({ message: "An otp could not be found" });
             }
