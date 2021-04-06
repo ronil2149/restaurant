@@ -139,7 +139,12 @@ exports.cancelOrder = (req,res,next) =>{
 exports.DeleteOrder =  (req, res, next) => {
   const email = req.body.email;
   const orderId = req.params.orderId;
-  Order.findOne({ email })
+  Order.findOne({ email : email })
+  .then(order=>{
+    if(!order){
+        return res.status(404).json('Order does not exist')
+    }
+  })
   // Order.findById(orderId)
     .then(order => order.remove())
     .then(deletedOrder => res.json({ message: "Order dropped ", deletedOrder: deletedOrder }))
