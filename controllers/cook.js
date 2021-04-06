@@ -55,7 +55,7 @@ exports.cooklogin = (req, res, next) => {
     Cook.findOne({ $or: [{ email: email }] })
         .then(cook => {
             if (!cook) {
-                const error = new Error('A cook with this email could not be found.');
+                const error = new Error('A cook with this email could  be found.');
                 error.statusCode = 401;
                 throw error;
             }
@@ -173,7 +173,7 @@ exports.cookforgot = (req, res, next) => {
             .then(cook => {
                 creator = cook;
                 cook.otps.push(ot);
-                res.status(200).json({ message: 'your otp:', otp: otp, creator: { _id: creator._id } });
+                res.status(200).json({ message: 'your otp', otp: otp, creator: { _id: creator._id } });
                 return cook.save();
             })
             .catch(err => {

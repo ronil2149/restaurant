@@ -55,7 +55,7 @@ exports.adminlogin = (req, res, next) => {
     Admin.findOne({ $or: [{ email: email }] })
         .then(admin => {
             if (!admin) {
-                const error = new Error('An admin with this email  not found .');
+                const error = new Error('An admin with this email could not be found .');
                 error.statusCode = 401;
                 throw error;
             }

@@ -71,7 +71,7 @@ exports.signup = (req, res, next) => {
         User.findOne({$or: [{ email:email}]})
         .then(user => {
           if (!user) {
-            const error = new Error('A user with this email or phone no. not found .');
+            const error = new Error('A user with this email  not found .');
             error.statusCode = 401;
             throw error;
           }

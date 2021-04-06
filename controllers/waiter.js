@@ -43,7 +43,7 @@ exports.waiterlogin = (req, res, next) => {
     Waiter.findOne({email: email})
     .then(waiter => {
       if (!waiter) {
-        const error = new Error('A waiter with this email not found .');
+        const error = new Error('A waiter with this email could not be found .');
         error.statusCode = 404;
         throw error;
       }

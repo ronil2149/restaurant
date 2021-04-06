@@ -41,7 +41,7 @@ exports.getMenu = (req, res, next) => {
     .then(products => {
       res.status(200)
         .json({
-          message: 'Fetched menu Successfully',
+          message: 'Fetched Menu Successfully',
           products: products,
           totalItems: totalItems
         });
@@ -63,7 +63,7 @@ exports.createProduct = (req, res, next) => {
   let creator;
   const product = new Product({
     name: name,
-    imageUrl: `http://192.168.29.2:8080/${imageUrl}`,
+    imageUrl: `http://192.168.0.5:8080/${imageUrl}`,
     description: description,
     price:price,    
     creator: {name:'Manager'}

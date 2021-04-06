@@ -54,7 +54,7 @@ exports.managerlogin = (req, res, next) => {
     Manager.findOne({ $or: [{ email: email }] })
         .then(manager => {
             if (!manager) {
-                const error = new Error('A manager with this email or phone no. not found .');
+                const error = new Error('A manager with this email could not be found .');
                 error.statusCode = 401;
                 throw error;
             }

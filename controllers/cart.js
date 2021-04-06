@@ -54,7 +54,6 @@ exports.add = (req, res, next) => {
         } else {
           throw new Error('Invalid request');
         }
-        // console.log(productDetails);
         return cart.save();
       } else {
         const cartData = {
@@ -160,7 +159,7 @@ exports.remove = function (req, res, next) {
   const email = req.body.email;
   Cart.get({ email })
     .then(Cart => Cart.remove())
-    .then(deletedCart => res.json({ message: "Cart dropped", deletedCart: deletedCart }))
+    .then(deletedCart => res.json({ message: "Cart dropped ", deletedCart: deletedCart }))
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
