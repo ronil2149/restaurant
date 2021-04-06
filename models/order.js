@@ -1,7 +1,45 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const OrderScema = new Schema({
+var ItemSchema = new Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+  },
+  qty: {
+    type: Number,
+    required: true,
+    min: [1, 'Quantity can not be less then 1.']
+  },
+  price: {
+    type: Number,
+            required: true,
+        },
+        total: {
+            type: Number,
+            required: true,
+        }
+});
+const CartSchema = new Schema({
+  email: {
+    type: String,
+    required: true,
+    match: [
+      /[\w]+?@[\w]+?\.[a-z]{2,4}/,
+      'The value of path {PATH} ({VALUE}) is not a valid email address.'
+    ]
+  },
+  items: [ItemSchema],
+  subTotal: {
+            default: 0,
+            type: Number
+        }
+},{
+        timestamps: true
+    }
+);
+
+const OrderSchema = new Schema({
 
     name: {
       type: String,
@@ -9,7 +47,7 @@ const OrderScema = new Schema({
     },
     email: {
       type: String,
-      required: true,
+    //   required: true,
       match: [
         /[\w]+?@[\w]+?\.[a-z]{2,4}/,
         'The value of path {PATH} ({VALUE}) is not a valid email address.'
@@ -18,11 +56,12 @@ const OrderScema = new Schema({
   paymentMethod: {
     type: String,
     default: 'cash_on_delivery'
-  }
+  },
+  order: [CartSchema]
 });
 
 
-OrderScema.statics = {
+OrderSchema.statics = {
   get (id) {
     return this.findById(id)
       .exec()
@@ -41,4 +80,4 @@ OrderScema.statics = {
 
   
 
-module.exports = mongoose.model('Order', OrderScema);
+module.exports = mongoose.model('Order', OrderSchema);
