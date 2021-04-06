@@ -55,7 +55,7 @@ exports.cooklogin = (req, res, next) => {
     Cook.findOne({ $or: [{ email: email }] })
         .then(cook => {
             if (!cook) {
-                const error = new Error('A cook with this email could  be found.');
+                const error = new Error('A cook with this email could not be found.');
                 error.statusCode = 401;
                 throw error;
             }
