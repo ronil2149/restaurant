@@ -15,4 +15,6 @@ router.get('/receive/:orderId',orderController.receiveOrder);
 
 router.get('/cancel/:orderId',orderController.cancelOrder);
 
+router.delete('/delete',orderController.DeleteOrder);
+
 module.exports = router;

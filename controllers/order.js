@@ -7,9 +7,10 @@ exports.add = (req,res,next) =>{
     const cartId = req.params.cartId;
     const name = req.body.name;
     const user = req.body.user;
+    const email = req.body.email;
     const paymentMethod = req.body.paymentMethod;   
 
-    Cart.findOne({email : req.body.email})
+    Cart.findOne({email : email})
     .then(cart=>{
         if(!cart){
           return  res.json({message:'could not find cart'});
@@ -17,6 +18,7 @@ exports.add = (req,res,next) =>{
         const order = new Order({
             name : name,
             paymentMethod: paymentMethod,
+            email:email,
             order: cart            
         })
         order.save()
@@ -132,3 +134,19 @@ exports.cancelOrder = (req,res,next) =>{
       next(err);
     });
 }
+
+
+exports.DeleteOrder =  (req, res, next) => {
+  const email = req.body.email;
+  const orderId = req.params.orderId;
+  Order.findOne({ email })
+  // Order.findById(orderId)
+    .then(order => order.remove())
+    .then(deletedOrder => res.json({ message: "Order dropped ", deletedOrder: deletedOrder }))
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
