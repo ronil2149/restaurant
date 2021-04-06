@@ -193,7 +193,7 @@ exports.cookreset = (req, res, next) => {
     OTP.findOne({ ot: otp1 })
         .then(ot => {
             if (!ot) {
-                const error = new Error('An otp could  be found');
+                const error = new Error('An otp could not be found');
                 error.statusCode = 404;
                 res.json({ message: "An otp could not be found" });
             }
