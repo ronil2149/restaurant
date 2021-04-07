@@ -6,24 +6,31 @@ const Product = require('../models/product');
 exports.add = (req,res,next) =>{
     const cartId = req.params.cartId;
     const name = req.body.name;
-    const user = req.body.user;
     const email = req.body.email;
-    const paymentMethod = req.body.paymentMethod;   
-
+    const paymentMethod = req.body.paymentMethod;  
+    let loadedCart;
     Cart.findOne({email : email})
     .then(cart=>{
         if(!cart){
-          return  res.json({message:'could not find cart'});
+            return res.json({message:'could not find cart'});
         }
-        const order = new Order({
+        loadedCart = cart;
+        return Order.findOne({email:email})
+      })
+      .then(order=>{
+        if(!order){
+          const order = new Order({
             name : name,
             paymentMethod: paymentMethod,
             email:email,
-            order: cart            
+            order: loadedCart            
         })
         order.save()
-        res.status(200).json({ orderId:order._id, userDetails:order ,Order: cart });
-    })
+        return res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
+        }
+        return res.json({message:"Seems like you made an order already...If not, can you please make anther one using diffrent email?", Your_Order : order})
+
+      })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;

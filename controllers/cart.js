@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
+const User = require('../models/user')
 // const product = require('../models/product');
 // const cartRepository = require('../middleware/repository');
 let productDetails;
@@ -16,14 +17,21 @@ exports.add = (req, res, next) => {
   Product.findById(req.params.productId)
     .then(product => {
       if (!product) {
-        res.status(404).json({ message: "Could not find post" });
+        return res.status(404).json({ message: "Could not find post" });
       }
       productDetails = product.price;
     })
-  Cart.findOne({ email: email }).populate({
-    path: "items.productId",
-    select: "name price description imageUrl "
-  })
+
+User.findOne({email:email})
+    .then(user=>{
+      if(!user){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email: email }).populate({
+        path: "items.productId",
+        select: "name price description imageUrl "
+      })    
+    })
     .then(cart => {
       if (!cart && qty <= 0) {
         throw new Error('Invalid request');
@@ -137,15 +145,19 @@ exports.subtract = function (req, res, next) {
 };
 
 
-exports.get = function (req, res, next) {
+exports.get = (req, res, next) => {
   const email = req.body.email;
   // console.log(email);
   if (!email) {
-    const error = new Error('Not found')
-    return next(error);
+    return res.status(200).json({message:'Enter a valid email first'})
   }
-  Cart.get({ email })
-    .then(Cart => res.json(Cart))
+  Cart.findOne({email:email})
+    .then(cart=>{
+      if(!cart){
+        return res.status(404).json({message:'Cart not found'})
+      }
+      return res.status(200).json({Your_Cart : cart})
+    })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;

@@ -41,6 +41,8 @@ exports.addCook = (req, res, next) => {
         .catch(err => {
             if (!err.statusCode) {
                 err.statusCode = 500;
+                return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added right credentials?"})
+
             }
             next(err);
         })
@@ -106,8 +108,7 @@ exports.getCooks = (req, res, next) => {
         res.status(200)
           .json({
             message: 'Fetched Cooks Successfully',
-            cooks: cooks,
-            totalItems: totalItems
+            cooks: cooks
           });
       })
       .catch(err => {
@@ -129,7 +130,7 @@ exports.getCook = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      res.status(200).json({ message: 'Cook Found!.', cook: cook });
+      res.status(200).json({ name: cook.name, email:cook.email, phone:cook.phone});
     })
     .catch(err => {
       if (!err.statusCode) {

@@ -41,14 +41,15 @@ exports.getMenu = (req, res, next) => {
     .then(products => {
       res.status(200)
         .json({
-          message: 'Fetched Menu Successfully',
-          products: products,
+          // message: 'Fetched Menu Successfully',
+           products,
           totalItems: totalItems
         });
     })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
+        console.log(err);
       }
       next(err);
     });
@@ -63,19 +64,24 @@ exports.createProduct = (req, res, next) => {
   let creator;
   const product = new Product({
     name: name,
-    imageUrl: `http://192.168.0.5:8080/${imageUrl}`,
+    imageUrl: `http://192.168.0.133:8080/${imageUrl}`,
     description: description,
     price:price,    
     creator: {name:'Manager'}
   });
-  product
-  .save()
-  .then(result => {
-    res.status(201).json({      
-      message: 'Item created successfully!',
-      product: product,
+  product.save()
+  // Product.findOne({name:name})
+  // .then(product=>{
+  //   if(product){
+  //     return res.json({message:' Name is already taken'})
+  //   }
+  //   else if (!product){
+  //     product.save();
       
-    });
+  //   }
+  // })
+  .then(result=>{
+    return res.status(201).json({message: 'Item created successfully!',product: product})
   })
     .catch(err => {
       if (!err.statusCode) {       
@@ -96,7 +102,7 @@ exports.getProduct = (req, res, next) => {
         error.statusCode = 404;
         res.json({message:'could not find it'})
       }
-      res.status(200).json({ message: 'Product fetched.', product: product });
+      res.status(200).json({ /*message: 'Product fetched.',*/ productName: product.name, productPrice: product.price, productDescription:product.description });
     })
     .catch(err => {
       if (!err.statusCode) {

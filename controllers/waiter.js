@@ -32,8 +32,8 @@ exports.addWaiter=  (req, res,next) => {
     .catch(()=>{
     const error = new Error('creation failed');
     error.statusCode = 401;
-    res.status(500).json({message:'validation failed'})
-    })
+    return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added right credentials?"})
+  })
 }
 
 exports.waiterlogin = (req, res, next) => {

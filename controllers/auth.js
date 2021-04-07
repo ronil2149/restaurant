@@ -54,6 +54,7 @@ exports.signup = (req, res, next) => {
         .catch(err => {
             if (!err.statusCode) {
                 err.statusCode = 500;
+                return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added right credentials?"})
             }
             next(err);
         })
