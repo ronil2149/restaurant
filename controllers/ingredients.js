@@ -1,4 +1,6 @@
 const Ingredient = require('../models/ingredients');
+const path = require('path');
+const fs = require('fs');
 
 const clearImage = filePath => {
     filePath = path.join(__dirname, '..', filePath);
@@ -18,15 +20,19 @@ exports.createIngredient = (req,res,next) =>{
       description: description,
       creator: {name:'Manager'}
     });
-    Ingredient.findOne({IngredientName:IngredientName})
-    .then(ingredient=>{
-        if(ingredient){
-            return res.json({message:'Ingredients already available'});
-        }
-        else if(!ingredient){
-            ingredient.save()
-            return res.status(201).json({message: 'Ingredient added to cart successfully!', product: ingredient });
-        }
+    ingredient.save()
+    // Ingredient.findOne({IngredientName:IngredientName})
+    // .then(ingredient=>{
+    //     if(ingredient){
+    //         return res.json({message:'Ingredient is already available'});
+    //     }
+    //     else {
+    //         ingredient.save()
+    //         return res.status(201).json({message: 'Ingredient added  successfully!', product: ingredient });
+    //     }
+    // })
+    .then(result =>{
+      return res.status(201).json({message:'Ingredient added successfully !', ingredient: result})
     })
       .catch(err => {
         if (!err.statusCode) {       
@@ -87,3 +93,71 @@ exports.getIngredient = (req, res, next) => {
         next(err);
       });
   };
+
+
+  
+exports.updateIngredient = (req, res, next) => {
+  const ingredientId = req.params.ingredientId;
+  const IngredientName = req.body.IngredientName;
+  const description = req.body.description;
+  let imageUrl = req.body.image;
+  if (req.file) {
+    imageUrl = req.file.path;
+  }
+  if (!imageUrl) {
+    const error = new Error('No file picked.');
+    error.statusCode = 422;
+    throw error;
+  }
+  Ingredient.findById(ingredientId)
+    .then(ingredient => {
+      if (!ingredient) {
+        const error = new Error('Could not find specified ingredient.');
+        error.statusCode = 404;
+        throw error;
+      }
+      if (imageUrl !== ingredient.imageUrl) {
+        clearImage(ingredient.imageUrl);
+      }
+      ingredient.IngredientName = IngredientName;
+      ingredient.imageUrl =`http://192.168.0.133:8080/${imageUrl}`;
+      ingredient.description = description;
+      return ingredient.save();
+    })
+    .then(result => {
+      res.status(200).json({ message: 'Ingredient updated!', post: result });
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+
+
+
+exports.deleteIngredient = (req, res, next) => {
+  const ingredientId = req.params.ingredientId;
+  Ingredient.findById(ingredientId)
+    .then(ingredient => {
+      if (!ingredient) {
+        const error = new Error('Could not find th ingredient.');
+        error.statusCode = 404;
+        throw error;
+      }
+      // console.log(product.imageUrl)
+      clearImage(ingredient.imageUrl);
+      return Ingredient.findByIdAndDelete(ingredientId);
+    })
+    .then(result => {
+      // console.log(result);
+      res.status(200).json({ message: 'Product deleted!!', DeletedIngredient : result })
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+}

@@ -99,6 +99,8 @@ exports.receiveOrder = (req,res,next) =>{
         if(!order){
             return res.status(404).json({message:"please make an order first :)"})
         }
+        order.OrderIs='In Progress';
+        order.save();
         return res.status(200).json({message:"your orders has been received...please wait till we make it ready for you" });
     })
     .catch(err => {
@@ -120,7 +122,9 @@ exports.cancelOrder = (req,res,next) =>{
         if(!order){
             return res.status(404).json({message:'Please make an order first :)'});
         }
-        return  Product.find()
+        order.OrderIs = 'Cancelled';
+        order.save();
+        return Product.find()
     }).then(count => {
         totalItems = count;
         return Product.find()
@@ -128,11 +132,8 @@ exports.cancelOrder = (req,res,next) =>{
           .limit(perPage)
       })
       .then(products => {
-        res.status(200)
-          .json({
-            message: 'Your order has been cancelled for security reasons...can you please make another one :)',
-            products: products
-          })
+
+        res.status(200).json({message: 'Your order has been cancelled for security reasons...can you please make another one :)',products: products})
         })
     .catch(err => {
       if (!err.statusCode) {
@@ -151,9 +152,10 @@ exports.DeleteOrder =  (req, res, next) => {
     if(!order){
         return res.status(404).json('Order does not exist')
     }
+    order.remove()
   })
   // Order.findById(orderId)
-    .then(order => order.remove())
+    
     .then(deletedOrder => res.json({ message: "Order dropped ", deletedOrder: deletedOrder }))
     .catch(err => {
       if (!err.statusCode) {
@@ -161,4 +163,42 @@ exports.DeleteOrder =  (req, res, next) => {
       }
       next(err);
     });
+};
+
+
+exports.PreparedOrderList = (req,res,next) =>{
+  const OrderIs = req.body.OrderIs;
+
+  Order.find({OrderIs})
+  .then(orders=>{
+    return res.status(200).json({message:'Here is the list you asked for', list:orders})
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
+
+
+exports.DoneOrder = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+  .then(order =>{
+    if(!order){
+      return res.status(404).json({message:"There are no such orders"});
+    }
+    else{
+      order.OrderIs = "Done";
+      order.save();
+      return res.status(200).json({message:"Order is done and is on it's way to you."})
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
 };

@@ -57,7 +57,14 @@ const OrderSchema = new Schema({
     type: String,
     default: 'cash_on_delivery'
   },
-  order: [CartSchema]
+  order: [CartSchema],
+  OrderIs:{
+    type:String
+  },
+  OrderHas:{
+    type:String
+  },
+
 });
 
 

@@ -11,6 +11,8 @@ router.get('/getIngredients',IngredientController.getIngredients);
 
 router.get('/getIngredient/:ingredientId',IngredientController.getIngredient);
 
-// router.put('/update/:ingredientId')
+router.put('/update/:ingredientId',IngredientController.updateIngredient);
+
+router.delete('/delete/:ingredientId',IngredientController.deleteIngredient);
 
 module.exports = router; 
