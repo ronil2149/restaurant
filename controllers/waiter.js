@@ -19,10 +19,11 @@ exports.addWaiter=  (req, res,next) => {
     const name = req.body.name;
     const phone = req.body.phone;
     const password = req.body.password;
+    const sha1 = crypto.createHash('sha1').update(password).digest('hex');
     const waiter = new Waiter({
     email: email,
     phone:phone,
-    password:password,
+    password:sha1,
     name: name,
     });
     return waiter.save()
@@ -36,41 +37,47 @@ exports.addWaiter=  (req, res,next) => {
   })
 }
 
+
 exports.waiterlogin = (req, res, next) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    let loadedWaiter;    
-    Waiter.findOne({email: email})
-    .then(waiter => {
-      if (!waiter) {
-        const error = new Error('A waiter with this email could not be found .');
-        error.statusCode = 404;
-        throw error;
-      }
-      loadedWaiter = waiter;
-      if(password == waiter.password){
-        return loadedWaiter;
-      }
-    })
-    .then(isEqual => {
-      if (!isEqual) {
-        const error = new Error('Wrong password!');
-        error.statusCode = 401;
-        throw error;
-      }
-      let accessToken = jwt.sign({email:loadedWaiter.email ,phone: loadedWaiter.phone, waiterId: loadedWaiter._id.toString()},'someaccesstoken',{expiresIn:"200s"});
-      let refreshToken = jwt.sign({email:loadedWaiter.email,phone: loadedWaiter.phone,waiterId: loadedWaiter._id.toString()},'somerefreshtoken',{expiresIn: "7d"})
-      refreshTokens.push(refreshToken);
-      console.log(refreshTokens);
-      res.status(200).json({accessToken:accessToken,
-        refreshToken:refreshToken,  waiterId: loadedWaiter._id.toString() });
-    })
-    .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
-      next(err);
-    });
+  const email = req.body.email;
+  const phone = req.body.phone;
+  const password = req.body.password;
+  let loadedWaiter;
+
+  Waiter.findOne({ $or: [{ email: email }] })
+      .then(waiter => {
+          if (!waiter) {
+              const error = new Error('A waiter with this email could  be found.');
+              error.statusCode = 401;
+              throw error;
+          }
+          var sha1 = crypto.createHash('sha1').update(password).digest('hex');
+          loadedWaiter = waiter;
+          if (sha1 == waiter.password) {
+              return loadedWaiter;
+          }
+      })
+      .then(isEqual => {
+          if (!isEqual) {
+              const error = new Error('Wrong password!');
+              error.statusCode = 401;
+              throw error;
+          }
+          let accessToken = jwt.sign({ email: loadedWaiter.email, phone: loadedWaiter.phone, waiterId: loadedWaiter._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "200s" });
+          let refreshToken = jwt.sign({ email: loadedWaiter.email, phone: loadedWaiter.phone, waiterId: loadedWaiter._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })
+          refreshTokens.push(refreshToken);
+          console.log(refreshTokens);
+          res.status(200).json({
+              accessToken: accessToken,
+              refreshToken: refreshToken, waiterId: loadedWaiter._id.toString()
+          });
+      })
+      .catch(err => {
+          if (!err.statusCode) {
+              err.statusCode = 500;
+          }
+          next(err);
+      });
 }
 
 exports.getWaiters = (req, res, next) => {

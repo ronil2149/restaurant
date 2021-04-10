@@ -26,7 +26,7 @@ const clearImage = filePath => {
 //     });
 // };
 
-exports.getMenu = (req, res, next) => {
+exports.getProducts = (req, res, next) => {
   const CurrentPage = req.query.page || 1;
   const perPage = 20;
   let totalItems;
@@ -53,7 +53,6 @@ exports.getMenu = (req, res, next) => {
       }
       next(err);
     });
-
 };
 
 exports.createProduct = (req, res, next) => {
@@ -61,12 +60,14 @@ exports.createProduct = (req, res, next) => {
   const description = req.body.description;
   const imageUrl = req.file.path;
   const price = req.body.price;
+  const availability = req.body.availability;
   let creator;
   const product = new Product({
     name: name,
-    imageUrl: `http://192.168.0.133:8080/${imageUrl}`,
+    imageUrl: `http://192.168.0.3:8080/${imageUrl}`,
     description: description,
-    price:price,    
+    price:price,
+    availability: availability,
     creator: {name:'Manager'}
   });
   product.save()
@@ -137,7 +138,7 @@ exports.updateProduct = (req, res, next) => {
         clearImage(product.imageUrl);
       }
       product.title = title;
-      product.imageUrl =`http://192.168.29.2:8080/${imageUrl}`;
+      product.imageUrl =`http://192.168.0.3:8080/${imageUrl}`;
       product.content = content;
       return product.save();
     })
@@ -152,6 +153,62 @@ exports.updateProduct = (req, res, next) => {
     });
 };
 
+exports.UnavailableItem = (req,res,next) =>{
+  const productId = req.params.productId;
+  Product.findById(productId)
+    .then(product=>{
+      if(!product){
+        return res.status(404).json({message:'There are no such products'});
+      }
+      product.availability = "unavailable";
+      product.save();
+      return res.status(200).json({message:"Product is unavailable for the moment can you choose another one"})
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+
+}
+
+exports.ItemAvailable = (req,res,next) =>{
+  const productId = req.params.productId;
+  Product.findById(productId)
+    .then(product=>{
+      if(!product){
+        return res.status(404).json({message:'There are no such product'});
+      }
+      product.availability = 'available';
+      product.save();
+      return res.status(200).json({message:'Product is now available'});
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+}
+
+
+exports.getMenu = (req,res,next)=>{
+  const availability = req.body.availability;
+  Product.find({availability})
+    .then(products=>{
+      if(!products){
+        return res.status(404).json({message:'There are no products'})
+      }
+      return res.status(200).json({message:"Here's the menu you asked for" , menu:products})
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+}
 
 
 exports.deleteProduct = (req, res, next) => {

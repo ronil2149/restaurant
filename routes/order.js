@@ -11,11 +11,12 @@ router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
 
-router.get('/receive/:orderId',orderController.receiveOrder);
+router.put('/receive/:orderId',orderController.receiveOrder);
 
 router.get('/list',orderController.PreparedOrderList);
 
-router.get('/cancel/:orderId',orderController.cancelOrder);
+router.put('/cancel/:orderId',orderController.cancelOrder);
+
 
 router.put('/done/:orderId',orderController.DoneOrder);
 

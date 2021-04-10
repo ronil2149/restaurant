@@ -124,6 +124,7 @@ exports.cancelOrder = (req,res,next) =>{
         }
         order.OrderIs = 'Cancelled';
         order.save();
+        console.log(order.order[0].items[0].productId)
         return Product.find()
     }).then(count => {
         totalItems = count;
@@ -132,8 +133,7 @@ exports.cancelOrder = (req,res,next) =>{
           .limit(perPage)
       })
       .then(products => {
-
-        res.status(200).json({message: 'Your order has been cancelled for security reasons...can you please make another one :)',products: products})
+        return res.status(200).json({message: 'Your order has been cancelled due to the unavailability of the product...can you please make another one :)',products: products})
         })
     .catch(err => {
       if (!err.statusCode) {
@@ -142,6 +142,9 @@ exports.cancelOrder = (req,res,next) =>{
       next(err);
     });
 }
+
+
+
 
 
 exports.DeleteOrder =  (req, res, next) => {

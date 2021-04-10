@@ -20,6 +20,10 @@ const productSchema = new Schema(
       required: true
     },
     feedback:String,
+    availability:{
+      type:String,
+      required:true
+    },
     creator: {
       type: Object,
       required: String
