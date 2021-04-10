@@ -74,7 +74,7 @@ exports.cooklogin = (req, res, next) => {
                 error.statusCode = 401;
                 throw error;
             }
-            let accessToken = jwt.sign({ email: loadedCook.email, phone: loadedCook.phone, cookId: loadedCook._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "200s" });
+            let accessToken = jwt.sign({ email: loadedCook.email, phone: loadedCook.phone, cookId: loadedCook._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
             let refreshToken = jwt.sign({ email: loadedCook.email, phone: loadedCook.phone, cookId: loadedCook._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })
             refreshTokens.push(refreshToken);
             console.log(refreshTokens);

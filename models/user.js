@@ -26,8 +26,7 @@ const userSchema = new Schema({
     name:{
         type:String,
         required:true
-    },
-   
+    },   
     otps:[{
         type: Schema.Types.ObjectId,
         ref : 'OTP'

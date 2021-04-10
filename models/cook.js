@@ -41,4 +41,4 @@ const cookSchema = new Schema({
 },{timestamps: { createdAt: 'created_At', updatedAt: 'updated_At', expireAt:'expired_at' }});
 
 
- module.exports = mongoose.model('Cook',cookSchema);
+module.exports = mongoose.model('Cook',cookSchema);

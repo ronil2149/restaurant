@@ -1,13 +1,11 @@
 var User = require('../models/user');
+
 const { validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator');
-const otpTool = require("otp-without-db");
 const key = "supersecretKey";
 const OTP = require('../models/otp');
-var user = require('../models/user');
 const jwt = require('jsonwebtoken');
 const FeedBack = require('../models/feedback');
 const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, Number: true, alphabets: false });
@@ -18,12 +16,12 @@ const transporter = nodemailer.createTransport({
         pass: 'Test@2015'
     }
 });
-let refreshTokens = [];
+let accessTokens = [];
 
 
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
-    if(!errors.isEmpty()){
+    if (!errors.isEmpty()) {
         const error = new Error('Validation Failed!');
         error.statusCode = 422;
         error.data = errors.array();
@@ -34,27 +32,27 @@ exports.signup = (req, res, next) => {
     const name = req.body.name;
     const password = req.body.password;
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
-     // bcrypt.hash(password, 12)
+    // bcrypt.hash(password, 12)
     //     .then(hashedPw => {
-    const user = new User({
+    const everyone = new User({
         name: name,
         email: email,
         phone: phone,
         // password: hashedPw,
         password: sha1
-        
+
     })
-    return user.save()
+    return everyone.save()
         // })
         .then(user => {
-            res.status(201).json({ message: 'user created', userId: user._id });
+            res.status(201).json({ message: 'registred successfully', Id: user._id });
             // return user.save();
 
         })
         .catch(err => {
             if (!err.statusCode) {
                 err.statusCode = 500;
-                return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added right credentials?"})
+                return res.status(500).json({ message: "mmm...somthing seems wrong here!!  you sure,you added right credentials?" })
             }
             next(err);
         })
@@ -63,59 +61,61 @@ exports.signup = (req, res, next) => {
 };
 
 
-   exports.login =  (req, res, next) => {
-        const email = req.body.email;
-        const phone = req.body.phone;
-        const password = req.body.password;
-        let loadedUser;
-        
-        User.findOne({$or: [{ email:email}]})
+exports.login = (req, res, next) => {
+    const email = req.body.email;
+    const phone = req.body.phone;
+    const password = req.body.password;
+    let loadedUser;
+
+    User.findOne({ $or: [{ email: email }] })
         .then(user => {
-          if (!user) {
-            const error = new Error('A user with this email  not found .');
-            error.statusCode = 401;
-            throw error;
-          }
-          var sha1 = crypto.createHash('sha1').update(password).digest('hex');
-          console.log(sha1);
-          loadedUser = user;
-          if(sha1 == user.password){
-            return loadedUser;
-          }
+            if (!user) {
+                const error = new Error('A user with this email  not found .');
+                error.statusCode = 401;
+                throw error;
+            }
+            var sha1 = crypto.createHash('sha1').update(password).digest('hex');
+            //   console.log(sha1);
+            loadedUser = user;
+            if (sha1 == user.password) {
+                return loadedUser;
+            }
         })
         .then(isEqual => {
-          if (!isEqual) {
-            const error = new Error('Wrong password!');
-            error.statusCode = 401;
-            throw error;
-          }
-          let accessToken = jwt.sign({email:loadedUser.email ,phone: loadedUser.phone, userId: loadedUser._id.toString()},'somesupersecretaccesstoken',{expiresIn:"200s"});
-          let refreshToken = jwt.sign({email:loadedUser.email,phone: loadedUser.phone,userId: loadedUser._id.toString()},'somesupersecretrefreshtoken',{expiresIn: "7d"})
-          refreshTokens.push(refreshToken);
-          console.log(refreshTokens);
-          res.status(200).json({accessToken:accessToken,
-            refreshToken:refreshToken,  userId: loadedUser._id.toString() });
+            if (!isEqual) {
+                const error = new Error('Wrong password!');
+                error.statusCode = 401;
+                throw error;
+            }
+            let accessToken = jwt.sign({ email: loadedUser.email, phone: loadedUser.phone, userId: loadedUser._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
+            let refreshToken = jwt.sign({ email: loadedUser.email, phone: loadedUser.phone, userId: loadedUser._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })
+            accessTokens.push(accessToken);
+            console.log(accessTokens);
+            res.status(200).json({
+                accessToken: accessToken,
+                refreshToken: refreshToken, userId: loadedUser._id.toString()
+            });
         })
         .catch(err => {
-          if (!err.statusCode) {
-            err.statusCode = 500;
-          }
-          next(err);
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
         });
-        }
-
-
-exports.protected = (req,res,next)=>{
-    res.status(200).json({message:'you are authenticated'})
 }
 
-exports.refresh = (req,res,next)=>{
+
+exports.protected = (req, res, next) => {
+    res.status(200).json({ message: 'you are authenticated' })
+}
+
+exports.refresh = (req, res, next) => {
     const refreshToken = req.body.token;
-    if(!refreshToken || !refreshTokens.includes(refreshToken)){
-        return res.status(403).json({message:'Refresh token is not found!!'});
+    if (!refreshToken || !refreshTokens.includes(refreshToken)) {
+        return res.status(403).json({ message: 'Refresh token is not found!!' });
     }
-    jwt.verify(refreshToken ,'somesupersecretrefreshtoken',(err,user)=>{
-        if(!err){
+    jwt.verify(refreshToken, 'somesupersecretrefreshtoken', (err, user) => {
+        if (!err) {
             const accessToken = jwt.sign(
                 {
                     email: user.email,
@@ -124,10 +124,10 @@ exports.refresh = (req,res,next)=>{
                 'somesupersecretaccesstoken',
                 { expiresIn: '100s' }
             );
-            res.status(201).json({AccessToken:accessToken })
+            res.status(201).json({ AccessToken: accessToken })
         }
-        else{
-            return res.status(403).json({message:'User is not authenticated'});
+        else {
+            return res.status(403).json({ message: 'User is not authenticated' });
         }
     })
 }
@@ -144,14 +144,15 @@ exports.forgotPw = (req, res, next) => {
         creator: User._id,
         date: new Date()
     });
-        User.findOne({ email: email })
-            .then(user => {
-                if (!user) {
-                    const error = new Error('An user with this email could not be found');
-                    error.statusCode = 401;
-                    res.status(401).json({ message: 'An user with this email could not be found' });
-                }
-              else{  transporter.sendMail({
+    User.findOne({ email: email })
+        .then(user => {
+            if (!user) {
+                const error = new Error('An user with this email could not be found');
+                error.statusCode = 401;
+                res.status(401).json({ message: 'An user with this email could not be found' });
+            }
+            else {
+                transporter.sendMail({
                     to: email,
                     from: 'hello-here.com',
                     subject: 'RESET here!!!',
@@ -160,21 +161,21 @@ exports.forgotPw = (req, res, next) => {
                 <a href = http://localhost:8080/auth/reset/ here>here</a></p>`
                 })
                 ot.save();
-            }                
-                return User.findOne({ email: email });
-            })
-            .then(user => {
-                creator = user;
-                user.otps.push(ot);
-                res.status(200).json({ message: 'your otp:', otp: otp, creator: { _id: creator._id } });
-                return user.save();
-            })
-            .catch(err => {
-                if (!err.statusCode) {
-                    err.statusCode = 500;
-                }
-                next(err);
-            })
+            }
+            return User.findOne({ email: email });
+        })
+        .then(user => {
+            creator = user;
+            user.otps.push(ot);
+            res.status(200).json({ message: 'your otp:', otp: otp, creator: { _id: creator._id } });
+            return user.save();
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
 };
 
 
@@ -234,24 +235,24 @@ exports.resetPw = (req, res, next) => {
                 error.statusCode = 404;
                 res.json({ message: "An otp could not be found" });
             }
-            else{
-                return User.findOne({ email : email})
+            else {
+                return User.findOne({ email: email })
             }
-        })    
+        })
         .then(user => {
-            if(!user){
+            if (!user) {
                 res.status(401).json({ message: 'An user with this email could not be found' });
             }
-            else
-            {const newPw = req.body.password;
-            user.password = newPw;
-            var sha1 = crypto.createHash('sha1').update(newPw).digest('hex').toString();
-            user.password = sha1;
-            user.save();
-            res.status(200).json({message:'password updated!!'});
-            return OTP.findOne({ ot: otp1 })  
-            }                  
-        })          
+            else {
+                const newPw = req.body.password;
+                user.password = newPw;
+                var sha1 = crypto.createHash('sha1').update(newPw).digest('hex').toString();
+                user.password = sha1;
+                user.save();
+                res.status(200).json({ message: 'password updated!!' });
+                return OTP.findOne({ ot: otp1 })
+            }
+        })
         .then(ot => {
             ot.ot = "";
             ot.save();
@@ -278,12 +279,12 @@ exports.resetPw = (req, res, next) => {
 //             user.password = newPw;
 //             res.status(200).json({message:'password updated!!'});
 //         })    
-    // bcrypt.hash(newPw,12)            
-    //         .then(hashedPw =>{
-    //             user.password = hashedPw;
-    //             newOne = hashedPw;
-    //             console.log(hashedPw);
-    //             return User.findOne({ _id: req.params.userId })
+// bcrypt.hash(newPw,12)            
+//         .then(hashedPw =>{
+//             user.password = hashedPw;
+//             newOne = hashedPw;
+//             console.log(hashedPw);
+//             return User.findOne({ _id: req.params.userId })
 //             })
 //             .then(user => {       
 //                 user.password = newOne;
@@ -307,33 +308,33 @@ exports.resetPw = (req, res, next) => {
 // };
 
 
-exports.feedback = (req,res,next)=>{
-     const userId = req.params.userId;
-     const name = req.body.name;
-     const title = req.body.title;
-     const message = req.body.message;
-     User.findOne({ name: name })
-     .then(user => {
-        if (!user) {
-            const error = new Error('An user with this name could not be found');
-            error.statusCode = 401;
-            throw error;
-        }
-        const feedback = new FeedBack({
-            title: title,
-            message: message
+exports.feedback = (req, res, next) => {
+    const userId = req.params.userId;
+    const name = req.body.name;
+    const title = req.body.title;
+    const message = req.body.message;
+    User.findOne({ name: name })
+        .then(user => {
+            if (!user) {
+                const error = new Error('An user with this name could not be found');
+                error.statusCode = 401;
+                throw error;
+            }
+            const feedback = new FeedBack({
+                title: title,
+                message: message
+            })
+
+            feedback.save();
+            user.feedbacks.push(feedback);
+            return res.status(200).json({ message: 'Feedback saved!' });
         })
-        
-        feedback.save();
-        user.feedbacks.push(feedback);
-        return res.status(200).json({message:'Feedback saved!'});
-    })
-    .catch(err => {
-        if (!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
-    })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
 };
 
 
