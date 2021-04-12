@@ -1,4 +1,5 @@
 var All = require('../models/all');
+const auth = require('../middleware/is-auth');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -33,6 +34,7 @@ exports.signup = (req, res, next) => {
     const name = req.body.name;
     const password = req.body.password;
     const activerole = req.body.activerole;
+    // const roles = req.body.roles;
     // const array = ["user","admin","cook","waiter","manager"];
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
     const all = new All({
@@ -45,6 +47,8 @@ exports.signup = (req, res, next) => {
     // if(activerole != array){
     //     return res.status(401).json({message:"There are no such roles in here!!!"});
     // }
+    all.roles.push(activerole);
+    console.log(all);
     return all.save()
         .then(all => {
             res.status(201).json({ message: 'Registered sucessfully', Id: all._id });
@@ -148,8 +152,7 @@ exports.login = (req, res, next) => {
 }
 
 
-exports.forgot = (req, res, next) => {
-    // const user = User.findById({ _id: req.params.userId });    
+exports.forgot = (req, res, next) => {    
     const userId = req.params.userId;
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, Number: true, alphabets: false });
     const email = req.body.email;
@@ -192,3 +195,94 @@ exports.forgot = (req, res, next) => {
                 next(err);
             })
 };
+
+exports.reset = (req, res, next) => {
+    const newPw = req.body.password;
+    let token = req.headers['authorization'];
+    token = token.split(' ')[1];
+    const  email = req.body.email;
+    const otp1 = req.body.otp1;
+    OTP.findOne({ ot: otp1 })
+        .then(ot => {
+            if (!ot) {
+                const error = new Error('An otp could not be found');
+                error.statusCode = 404;
+                res.json({ message: "An otp could not be found" });
+            }
+            else{
+                return All.findOne({ email : email})
+            }
+        })    
+        .then(all => {
+            if(!all){
+                res.status(401).json({ message: 'An admin with this email could not be found' });
+            }
+            else
+            {const newPw = req.body.password;
+            all.password = newPw;
+            var sha1 = crypto.createHash('sha1').update(newPw).digest('hex').toString();
+            all.password = sha1;
+            all.save();
+            res.status(200).json({message:'password updated!!'});
+            return OTP.findOne({ ot: otp1 })  
+            }                  
+        })          
+        .then(ot => {
+            ot.ot = "";
+            ot.save();
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
+};
+
+
+exports.getSomeone = (req,res,next) =>{
+    const activerole = req.body.activerole;
+    All.find({activerole:activerole})
+        .then(all=>{
+            if(!all){
+                return res.status(404).json({message:"There are no person with such roles"});
+            }
+            else if(activerole == ""){
+                return res.status(404).json({message:"There are no person with such roles"});
+            }
+            else{
+                return res.status(200).json({message:"Here is the list you asked for..", list:all});
+            }           
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
+}
+
+
+exports.UpdateRole = (req,res,next) =>{
+    const activerole = req.body.activerole;
+    let token = req.headers['authorization'];
+    token = token.split(' ')[1];
+    All.findOne({email})
+    .then(all=>{
+        if(!all){
+            return res.status(400).json({message:'There are no such person !!!'});
+        }
+        all.activerole = activerole;
+        return all.save()
+    })
+    .then(result =>{
+        return res.status(200).json({message:"Role updated successfully", UpdatedRole : result})
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    })
+}
+

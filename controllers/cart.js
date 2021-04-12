@@ -81,7 +81,9 @@ User.findOne({email:email})
         return cart.save();
       }
     })
-    .then(savedCart => res.json(savedCart))
+    .then(savedCart => {
+      return res.json(savedCart)
+    })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;

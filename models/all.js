@@ -61,7 +61,11 @@ const allSchema = new Schema({
         type:String,
         required:true,
         default:'user'
-    }
+    },
+    roles:[{
+        type:String,
+        default:'user'
+    }]
 },{timestamps: { createdAt: 'created_At', updatedAt: 'updated_At', expireAt:'expired_at' }});
 
 allSchema.methods.addtocart = function(product){

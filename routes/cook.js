@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const auth = require('../middleware/is-auth');
 
 const cookController = require('../controllers/cook');
 
