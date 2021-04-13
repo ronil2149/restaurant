@@ -1,15 +1,16 @@
 const express = require('express');
 
 const orderController = require('../controllers/order');
+const auth = require('../middleware/is-auth');
 
 const router = express.Router();
 
 
-router.put('/makeorder',orderController.add);
+router.put('/makeorder',auth.auth,orderController.add);
 
 router.get('/getorder/:orderId',orderController.getOrder);
 
-router.get('/getorders',orderController.getOrders);
+router.get('/getorders',auth.auth,orderController.getOrders);
 
 router.put('/receive/:orderId',orderController.receiveOrder);
 

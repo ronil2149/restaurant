@@ -34,8 +34,7 @@ exports.signup = (req, res, next) => {
     const name = req.body.name;
     const password = req.body.password;
     const activerole = req.body.activerole;
-    // const roles = req.body.roles;
-    // const array = ["user","admin","cook","waiter","manager"];
+    const roles = req.body.roles;
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
     const all = new All({
         name: name,
@@ -44,10 +43,6 @@ exports.signup = (req, res, next) => {
         activerole: activerole,
         password: sha1        
     })
-    // if(activerole != array){
-    //     return res.status(401).json({message:"There are no such roles in here!!!"});
-    // }
-    all.roles.push(activerole);
     console.log(all);
     return all.save()
         .then(all => {
@@ -273,7 +268,14 @@ exports.UpdateRole = (req,res,next) =>{
             return res.status(400).json({message:'There are no such person !!!'});
         }
         all.activerole = activerole;
-        return all.save()
+        console.log(all.roles);
+        if(all.roles.includes(activerole)){
+            return res.status(500).json({message:'You already have that role'});
+        }
+        else{
+            all.roles.push(activerole);
+            return all.save();
+        }
     })
     .then(result =>{
         return res.status(200).json({message:"Role updated successfully", UpdatedRole : result})
@@ -286,3 +288,33 @@ exports.UpdateRole = (req,res,next) =>{
     })
 }
 
+exports.SwitchRole = (req,res,next) =>{
+    const activerole = req.body.activerole;
+    let token = req.headers['authorization'];
+    token = token.split(' ')[1];
+    All.findOne({email})
+    .then(all=>{
+        if(!all){
+            return res.status(400).json({message:'There are no such person !!!'});
+        }        
+        console.log(all.roles);
+        if(all.roles.includes(activerole)){
+            all.activerole = activerole;
+            all.save();
+            return res.status(200).json({message:`You are ${activerole} from now on.!`});
+        }
+        else{            
+            return res.status(404).json({message:'You do not have this role in your possession !!!'});
+        }
+    })
+    .then(result =>{
+        return res.status(200).json({message:"Role updated successfully", UpdatedRole : result})
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    })       
+
+}

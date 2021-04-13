@@ -6,16 +6,17 @@ const Product = require('../models/product');
 exports.add = (req,res,next) =>{
     const cartId = req.params.cartId;
     const name = req.body.name;
-    const email = req.body.email;
+    let token = req.headers['authorization'];
+    token = token.split(' ')[1];
     const paymentMethod = req.body.paymentMethod;  
     let loadedCart;
-    Cart.findOne({email : email})
+    Cart.findOne({email})
     .then(cart=>{
         if(!cart){
             return res.json({message:'could not find cart'});
         }
         loadedCart = cart;
-        return Order.findOne({email:email})
+        return Order.findOne({email})
       })
       .then(order=>{
         if(!order){
@@ -43,7 +44,6 @@ exports.add = (req,res,next) =>{
 
 exports.getOrder = (req,res,next) =>{
     const orderId = req.params.orderId;
-    const email = req.body.email;
     Order.findById(orderId)
     .then(order=>{
         if(!order){
@@ -148,9 +148,10 @@ exports.cancelOrder = (req,res,next) =>{
 
 
 exports.DeleteOrder =  (req, res, next) => {
-  const email = req.body.email;
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const orderId = req.params.orderId;
-  Order.findOne({ email : email })
+  Order.findOne({ email })
   .then(order=>{
     if(!order){
         return res.status(404).json('Order does not exist')

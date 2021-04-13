@@ -2,16 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
-const User = require('../models/user')
-// const product = require('../models/product');
-// const cartRepository = require('../middleware/repository');
+const User = require('../models/user');
+const All = require('../models/all');
 let productDetails;
 
 exports.add = (req, res, next) => {
-  const email = req.body.email;
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const productId = req.params.productId;
+  const priority = req.body.priority;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
+  let image;
   // console.log('qty: ', qty);
 
   Product.findById(req.params.productId)
@@ -20,14 +22,15 @@ exports.add = (req, res, next) => {
         return res.status(404).json({ message: "Could not find post" });
       }
       productDetails = product.price;
+      image = product.imageUrl;
     })
 
-User.findOne({email:email})
-    .then(user=>{
-      if(!user){
+All.findOne({email})
+    .then(all=>{
+      if(!all){
         return res.status(403).json({message:'Register yourself first,will ya?!'})
       }
-      return Cart.findOne({ email: email }).populate({
+      return Cart.findOne({ email }).populate({
         path: "items.productId",
         select: "name price description imageUrl "
       })    
@@ -49,12 +52,15 @@ User.findOne({email:email})
         } else if (indexFound !== -1) {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
-          cart.items[indexFound].price = productDetails
+          cart.items[indexFound].price = productDetails;
+          cart.items[indexFound].imageUrl = image;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
           cart.items.push({
             productId:productId,
             qty: qty,
+            priority:priority,
+            imageUrl : image,
             price: productDetails,
             total: parseInt(productDetails * qty)
           })
@@ -65,12 +71,14 @@ User.findOne({email:email})
         return cart.save();
       } else {
         const cartData = {
-          email: email,
+          email: email,          
           items: [
             {
               productId: productId,
               qty: qty,
+              priority: priority,
               price: productDetails,
+              imageUrl : image,
               total: productDetails * qty,
 
             }],
@@ -94,7 +102,8 @@ User.findOne({email:email})
 
 
 exports.subtract = function (req, res, next) {
-  const  email = req.body.email;
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const product_id = req.params.product_id;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
@@ -148,8 +157,8 @@ exports.subtract = function (req, res, next) {
 
 
 exports.get = (req, res, next) => {
-  const email = req.body.email;
-  // console.log(email);
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   if (!email) {
     return res.status(200).json({message:'Enter a valid email first'})
   }
@@ -170,7 +179,8 @@ exports.get = (req, res, next) => {
 
 
 exports.remove = function (req, res, next) {
-  const email = req.body.email;
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   Cart.get({ email })
     .then(Cart => Cart.remove())
     .then(deletedCart => res.json({ message: "Cart dropped ", deletedCart: deletedCart }))

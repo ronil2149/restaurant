@@ -64,7 +64,7 @@ exports.createProduct = (req, res, next) => {
   let creator;
   const product = new Product({
     name: name,
-    imageUrl: `http://192.168.0.3:8080/${imageUrl}`,
+    imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
     description: description,
     price:price,
     availability: availability,
