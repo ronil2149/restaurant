@@ -3,6 +3,15 @@ const Schema = mongoose.Schema;
 
 const productSchema = new Schema(
   {
+    categoryId: {
+      type:Schema.Types.ObjectId,
+      required:true,
+      ref:'Category'
+    },
+    categoryName: {
+        type: String,
+        // required:true
+    },
     name: {
       type: String,
       required: true
@@ -15,19 +24,23 @@ const productSchema = new Schema(
       type:Number,
       required:true
     },
+    availability:{
+      type:Boolean,
+      default:true
+    },
     description: {
       type: String,
       required: true
     },
     feedback:String,
-    availability:{
-      type:String,
-      required:true
-    },
     creator: {
       type: Object,
-      required: String
-    }
+      // required: String
+    },
+    category:[{
+        type:Schema.Types.ObjectId,
+        ref:'Category'
+      }]
   },
   { timestamps: true }
 );

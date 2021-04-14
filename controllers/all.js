@@ -301,7 +301,7 @@ exports.SwitchRole = (req,res,next) =>{
         if(all.roles.includes(activerole)){
             all.activerole = activerole;
             all.save();
-            return res.status(200).json({message:`You are ${activerole} from now on.!`});
+            return res.status(200).json({message:`You are ${activerole} from now on.!`, result:all});
         }
         else{            
             return res.status(404).json({message:'You do not have this role in your possession !!!'});

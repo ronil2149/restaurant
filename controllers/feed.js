@@ -2,7 +2,10 @@ const path = require('path');
 const fs = require('fs');
 
 const Product = require('../models/product');
+const product = require('../models/product');
+
 const User = require('../models/user');
+const  Category = require('../models/category');
 
 const clearImage = filePath => {
   filePath = path.join(__dirname, '..', filePath);
@@ -10,25 +13,9 @@ const clearImage = filePath => {
 };
 
 
-
-// exports.getPosts = (req, res, next) => {
-//   Post.find()
-//     .then(posts => {
-//       res
-//         .status(200)
-//         .json({ message: 'Fetched posts successfully.', posts: posts });
-//     })
-//     .catch(err => {
-//       if (!err.statusCode) {
-//         err.statusCode = 500;
-//       }
-//       next(err);
-//     });
-// };
-
 exports.getProducts = (req, res, next) => {
   const CurrentPage = req.query.page || 1;
-  const perPage = 20;
+  const perPage = 10;
   let totalItems;
   Product.find()
     .countDocuments()
@@ -41,69 +28,71 @@ exports.getProducts = (req, res, next) => {
     .then(products => {
       res.status(200)
         .json({
-          // message: 'Fetched Menu Successfully',
-           products,
+          message: 'Fetched menu Successfully',
+          products: products,
           totalItems: totalItems
         });
     })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
-        console.log(err);
       }
       next(err);
     });
+
 };
 
 exports.createProduct = (req, res, next) => {
+  const categoryId = req.params.categoryId;
   const name = req.body.name;
   const description = req.body.description;
   const imageUrl = req.file.path;
+  let loadedcategory;
   const price = req.body.price;
-  const availability = req.body.availability;
-  let creator;
-  const product = new Product({
-    name: name,
-    imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
-    description: description,
-    price:price,
-    availability: availability,
-    creator: {name:'Manager'}
-  });
-  product.save()
-  // Product.findOne({name:name})
-  // .then(product=>{
-  //   if(product){
-  //     return res.json({message:' Name is already taken'})
-  //   }
-  //   else if (!product){
-  //     product.save();
-      
-  //   }
-  // })
-  .then(result=>{
-    return res.status(201).json({message: 'Item created successfully!',product: product})
-  })
-    .catch(err => {
-      if (!err.statusCode) {       
-        err.statusCode = 500;
-      }
-      next(err);
-    });
 
+    Category.findById(req.params.categoryId)
+    .then(category=>{
+      if(!category){
+        const error = new Error("product not found")
+        throw error;
+      }
+      const product = new Product({
+        categoryId : categoryId,
+        name:name,
+        description:description,
+        price:price,
+        imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
+      })
+      product.save()
+      loadedCategory = category
+      category.products.push(product)
+      return category.save();
+    })
+    .then(result => {
+      res.status(201).json({      
+          message: 'Product created successfully!',
+        product: product
+      });
+    })
+      .catch(err => {
+        if (!err.statusCode) {       
+          err.statusCode = 500;
+        }
+        next(err);
+      });
 };
 
 
-exports.getProduct = (req, res, next) => {
+exports.getProduct =(req, res, next) => {
   const productId = req.params.productId;
   Product.findById(productId)
     .then(product => {
       if (!product) {
         const error = new Error('Could not find product.');
         error.statusCode = 404;
-        res.json({message:'could not find it'})
+        throw error;
       }
-      res.status(200).json({ /*message: 'Product fetched.',*/ productName: product.name, productPrice: product.price, productDescription:product.description });
+      res.status(200).json({ message: 'Product fetched.', product: product });
     })
     .catch(err => {
       if (!err.statusCode) {
@@ -116,9 +105,9 @@ exports.getProduct = (req, res, next) => {
 
 exports.updateProduct = (req, res, next) => {
   const productId = req.params.productId;
-  const title = req.body.title;
-  const content = req.body.content;
-  let imageUrl = req.body.image;
+  const name = req.body.name;
+  const description = req.body.description;
+  let imageUrl = req.body.imageUrl;
   if (req.file) {
     imageUrl = req.file.path;
   }
@@ -137,9 +126,9 @@ exports.updateProduct = (req, res, next) => {
       if (imageUrl !== product.imageUrl) {
         clearImage(product.imageUrl);
       }
-      product.title = title;
-      product.imageUrl =`http://192.168.0.3:8080/${imageUrl}`;
-      product.content = content;
+      product.name = name;
+      product.imageUrl = `http://localhost:8080/${imageUrl}`;
+      product.description = description;
       return product.save();
     })
     .then(result => {
@@ -160,10 +149,11 @@ exports.UnavailableItem = (req,res,next) =>{
       if(!product){
         return res.status(404).json({message:'There are no such products'});
       }
-      product.availability = "unavailable";
+      else {product.availability = false;
+      // console.log(product.availability);
       product.save();
-      return res.status(200).json({message:"Product is unavailable for the moment can you choose another one"})
-    })
+      return res.status(200).json({message:"Product is unavailable for the moment can you choose another one", product:product})
+    }})
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
@@ -180,7 +170,7 @@ exports.ItemAvailable = (req,res,next) =>{
       if(!product){
         return res.status(404).json({message:'There are no such product'});
       }
-      product.availability = 'available';
+      product.availability = true;
       product.save();
       return res.status(200).json({message:'Product is now available'});
     })
@@ -220,12 +210,19 @@ exports.deleteProduct = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      // console.log(product.imageUrl)
       clearImage(product.imageUrl);
       return Product.findByIdAndDelete(productId);
     })
+    return Category.findOne(req.params.categoryId)
+    
+    .then(category=>{    
+      loadedCategory = category
+      category.products.pull(productId); 
+      Product.findByIdAndDelete(productId);
+      return category.save();
+    }) 
     .then(result => {
-      // console.log(result);
+      console.log(result);
       res.status(200).json({ message: 'Product deleted!!' })
     })
     .catch(err => {
@@ -234,5 +231,30 @@ exports.deleteProduct = (req, res, next) => {
       }
       next(err);
     });
+}
+
+
+exports.getMenuByCategoryId = (req, res, next)=> {
+  const categoryId = req.params.categoryId;
+  let loadedProduct;
+
+  Product.find({categoryId})
+  .then(product => {
+    console.log(product);
+    if (product) {
+      return res.status(200).json({ message: 'Here is your menu.', products: product });
+
+    }
+    else if (product.availability == 'available'){
+      return res.status(200).json({ message: 'Here is your menu.', product: product });
+    }
+    
+    })    
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });    
 }
 

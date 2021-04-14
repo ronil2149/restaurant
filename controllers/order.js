@@ -16,6 +16,7 @@ exports.add = (req,res,next) =>{
             return res.json({message:'could not find cart'});
         }
         loadedCart = cart;
+        // subTotal = loadedCart.subTotal;
         return Order.findOne({email})
       })
       .then(order=>{
@@ -24,7 +25,8 @@ exports.add = (req,res,next) =>{
             name : name,
             paymentMethod: paymentMethod,
             email:email,
-            order: loadedCart            
+            order: loadedCart,
+
         })
         order.save()
         return res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
@@ -206,3 +208,25 @@ exports.DoneOrder = (req,res,next) =>{
     next(err);
   });
 };
+
+
+exports.setDiscount = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+  .then(order=>{
+    if(!order){
+      return res.status(404).json({message:"There are no such order!!"});
+    }
+    console.log(order.order[0].subTotal);
+    order.order[0].subTotal = (order.order[0].subTotal)/2 ;
+    order.save();
+    console.log(order.order[0].subTotal);
+    return res.status(200).json({message:"Sorry for the difficulties...here let us help you with your order",order:order});
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}

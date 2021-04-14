@@ -16,11 +16,6 @@ exports.auth = (req,res,next)=>{
             email = user.email;
             id = user.Id;
             phone = user.phone;
-            // console.log(email);
-            // user.email = email;
-            // console.log(email);
-            // req.userId = user.id;
-            // req.userEmail = user.email;
             next();
         }
         else{

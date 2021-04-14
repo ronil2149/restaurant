@@ -13,19 +13,27 @@ exports.add = (req, res, next) => {
   const priority = req.body.priority;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
-  let image;
+  // let image;
   // console.log('qty: ', qty);
 
-  Product.findById(req.params.productId)
+  Product.findById(productId).populate({
+    path: "items.productId",
+    select: "name price description imageUrl "
+  })
     .then(product => {
       if (!product) {
         return res.status(404).json({ message: "Could not find post" });
       }
+      Id = product._id;
+      console.log(Id)
       productDetails = product.price;
-      image = product.imageUrl;
+      // image = product.imageUrl;
     })
 
-All.findOne({email})
+All.findOne({email}).populate({
+  path: "items.productId",
+  select: "name price description imageUrl "
+})
     .then(all=>{
       if(!all){
         return res.status(403).json({message:'Register yourself first,will ya?!'})
@@ -40,7 +48,7 @@ All.findOne({email})
         throw new Error('Invalid request');
       } else if (cart) {
         const indexFound = cart.items.findIndex(item => {
-          return item.productId === productId;
+          return item.product._id === productId;
         });
         if (indexFound !== -1 && qty <= 0) {
           cart.items.splice(indexFound, 1);
@@ -53,14 +61,14 @@ All.findOne({email})
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
           cart.items[indexFound].price = productDetails;
-          cart.items[indexFound].imageUrl = image;
+          // cart.items[indexFound].imageUrl = image;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
           cart.items.push({
-            productId:productId,
+            productId :productId,
             qty: qty,
             priority:priority,
-            imageUrl : image,
+            // imageUrl : image,
             price: productDetails,
             total: parseInt(productDetails * qty)
           })
@@ -74,11 +82,11 @@ All.findOne({email})
           email: email,          
           items: [
             {
-              productId: productId,
+              productId : productId,
               qty: qty,
               priority: priority,
               price: productDetails,
-              imageUrl : image,
+              // imageUrl : image,
               total: productDetails * qty,
 
             }],

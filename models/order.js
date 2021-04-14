@@ -11,6 +11,9 @@ var ItemSchema = new Schema({
     required: true,
     min: [1, 'Quantity can not be less then 1.']
   },
+  priority:{
+    type:Number
+  },
   price: {
     type: Number,
             required: true,
@@ -21,14 +24,7 @@ var ItemSchema = new Schema({
         }
 });
 const CartSchema = new Schema({
-  email: {
-    type: String,
-    required: true,
-    match: [
-      /[\w]+?@[\w]+?\.[a-z]{2,4}/,
-      'The value of path {PATH} ({VALUE}) is not a valid email address.'
-    ]
-  },
+  
   items: [ItemSchema],
   subTotal: {
             default: 0,

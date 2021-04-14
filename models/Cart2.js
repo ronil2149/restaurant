@@ -15,10 +15,10 @@ var ItemSchema = new Schema({
     required: true,
     min: [1, 'Quantity can not be less then 1.']
   },
-  imageUrl: {
-    type: String,
-    required: true
-  },
+  // imageUrl: {
+  //   type: String,
+  //   required: true
+  // },
   price: {
     type: Number,
             required: true,
