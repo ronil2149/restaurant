@@ -21,7 +21,7 @@ router.put('/cancel/:orderId',orderController.cancelOrder);
 
 router.put('/done/:orderId',orderController.DoneOrder);
 
-router.delete('/delete',orderController.DeleteOrder);
+router.delete('/delete',auth.auth,orderController.DeleteOrder);
 
 router.put('/setdiscount/:orderId',orderController.setDiscount);
 

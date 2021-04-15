@@ -4,7 +4,6 @@ const Product = require('../models/product');
 
 
 exports.add = (req,res,next) =>{
-    const cartId = req.params.cartId;
     const name = req.body.name;
     let token = req.headers['authorization'];
     token = token.split(' ')[1];
@@ -16,7 +15,7 @@ exports.add = (req,res,next) =>{
             return res.json({message:'could not find cart'});
         }
         loadedCart = cart;
-        // subTotal = loadedCart.subTotal;
+        subTotal = loadedCart.subTotal;
         return Order.findOne({email})
       })
       .then(order=>{
@@ -25,6 +24,7 @@ exports.add = (req,res,next) =>{
             name : name,
             paymentMethod: paymentMethod,
             email:email,
+            subTotal: subTotal,
             order: loadedCart,
 
         })
@@ -212,15 +212,15 @@ exports.DoneOrder = (req,res,next) =>{
 
 exports.setDiscount = (req,res,next) =>{
   const orderId = req.params.orderId;
+  const discount = req.body.discount;
   Order.findById(orderId)
   .then(order=>{
     if(!order){
       return res.status(404).json({message:"There are no such order!!"});
     }
-    console.log(order.order[0].subTotal);
-    order.order[0].subTotal = (order.order[0].subTotal)/2 ;
+    const offer = (order.subTotal)/100 * discount;
+    order.subTotal = order.subTotal - offer ;
     order.save();
-    console.log(order.order[0].subTotal);
     return res.status(200).json({message:"Sorry for the difficulties...here let us help you with your order",order:order});
   })
   .catch(err => {

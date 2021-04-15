@@ -237,7 +237,17 @@ exports.reset = (req, res, next) => {
 
 exports.getSomeone = (req,res,next) =>{
     const activerole = req.body.activerole;
+    const CurrentPage = req.query.page || 1;
+    const perPage = 10;
+    let totalPersons;
     All.find({activerole:activerole})
+    .countDocuments()
+    .then(count => {
+      totalPersons = count;
+      return All.find({activerole:activerole})
+        .skip((CurrentPage - 1) * perPage)
+        .limit(perPage)
+    })
         .then(all=>{
             if(!all){
                 return res.status(404).json({message:"There are no person with such roles"});
@@ -246,7 +256,7 @@ exports.getSomeone = (req,res,next) =>{
                 return res.status(404).json({message:"There are no person with such roles"});
             }
             else{
-                return res.status(200).json({message:"Here is the list you asked for..", list:all});
+                return res.status(200).json({message:"Here is the list you asked for..", list:all, totalPersons : totalPersons});
             }           
         })
         .catch(err => {
@@ -268,7 +278,6 @@ exports.UpdateRole = (req,res,next) =>{
             return res.status(400).json({message:'There are no such person !!!'});
         }
         all.activerole = activerole;
-        console.log(all.roles);
         if(all.roles.includes(activerole)){
             return res.status(500).json({message:'You already have that role'});
         }
@@ -318,3 +327,5 @@ exports.SwitchRole = (req,res,next) =>{
     })       
 
 }
+
+

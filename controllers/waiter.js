@@ -24,7 +24,7 @@ exports.addWaiter= (req, res,next) => {
     email: email,
     phone:phone,
     password:sha1,
-    name: name,s
+    name: name,
     });
     return waiter.save()
     .then(waiter=>{

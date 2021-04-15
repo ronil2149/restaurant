@@ -25,11 +25,7 @@ var ItemSchema = new Schema({
 });
 const CartSchema = new Schema({
   
-  items: [ItemSchema],
-  subTotal: {
-            default: 0,
-            type: Number
-        }
+  items: [ItemSchema]
 },{
         timestamps: true
     }
@@ -49,6 +45,10 @@ const OrderSchema = new Schema({
         'The value of path {PATH} ({VALUE}) is not a valid email address.'
       ]
     },
+    subTotal: {
+      default: 0,
+      type: Number
+  },
   paymentMethod: {
     type: String,
     default: 'cash_on_delivery'
@@ -56,11 +56,10 @@ const OrderSchema = new Schema({
   order: [CartSchema],
   OrderIs:{
     type:String
-  },
-  OrderHas:{
-    type:String
-  },
+  }
 
+},{
+  timestamps: true
 });
 
 
@@ -73,14 +72,11 @@ OrderSchema.statics = {
           return order;
         }
         const err = new Error(
-          'No such product exists!',
-          
+          'No such product exists!',         
         );
         return Promise.reject(err);
       });
   }
 }
-
-  
 
 module.exports = mongoose.model('Order', OrderSchema);
