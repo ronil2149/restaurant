@@ -12,7 +12,9 @@ exports.add = (req,res,next) =>{
     Cart.findOne({email})
     .then(cart=>{
         if(!cart){
-            return res.json({message:'could not find cart'});
+          const error = new Error('Could not find Cart!!');
+          error.statusCode = 404;
+          throw error;
         }
         loadedCart = cart;
         subTotal = loadedCart.subTotal;
@@ -25,8 +27,7 @@ exports.add = (req,res,next) =>{
             paymentMethod: paymentMethod,
             email:email,
             subTotal: subTotal,
-            order: loadedCart,
-
+            order: loadedCart
         })
         order.save()
         return res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
@@ -88,8 +89,7 @@ exports.getOrders = (req, res, next) => {
           err.statusCode = 500;
         }
         next(err);
-      });
-  
+      });  
   };
   
 
@@ -102,6 +102,7 @@ exports.receiveOrder = (req,res,next) =>{
             return res.status(404).json({message:"please make an order first :)"})
         }
         order.OrderIs='In Progress';
+        order.OrderReceivedAt = Date.now();
         order.save();
         return res.status(200).json({message:"your orders has been received...please wait till we make it ready for you" });
     })
@@ -146,9 +147,6 @@ exports.cancelOrder = (req,res,next) =>{
 }
 
 
-
-
-
 exports.DeleteOrder =  (req, res, next) => {
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
@@ -174,7 +172,6 @@ exports.DeleteOrder =  (req, res, next) => {
 
 exports.PreparedOrderList = (req,res,next) =>{
   const OrderIs = req.body.OrderIs;
-
   Order.find({OrderIs})
   .then(orders=>{
     return res.status(200).json({message:'Here is the list you asked for', list:orders})
@@ -187,6 +184,27 @@ exports.PreparedOrderList = (req,res,next) =>{
   });
 }
 
+exports.ServeOrder = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+    .then(order=>{
+        if(!order){
+            return res.status(404).json({message:"There are no such order"})
+        }
+        order.OrderIs='Served';
+        order.OrderServedAt = Date.now();
+        order.save();
+        return res.status(200).json({message:"Order has been served" });
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+
+}
+
 
 exports.DoneOrder = (req,res,next) =>{
   const orderId = req.params.orderId;
@@ -197,6 +215,7 @@ exports.DoneOrder = (req,res,next) =>{
     }
     else{
       order.OrderIs = "Done";
+      order.OrderDoneAt = Date.now();
       order.save();
       return res.status(200).json({message:"Order is done and is on it's way to you."})
     }
@@ -209,6 +228,41 @@ exports.DoneOrder = (req,res,next) =>{
   });
 };
 
+
+exports.TimeItTook = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  let days;
+  let hours;
+  let minutes;
+  let seconds;
+  Order.findById(orderId)
+  .then(order=>{
+    if(!order){
+      return res.status(404).json({message:"There are no such order!"})
+    }
+    else {
+    let Date1 = order.OrderReceivedAt
+    let Date2 = order.OrderDoneAt
+    let Date3 = order.OrderServedAt
+    let res = (Date2 - Date1) / 1000;
+    let res1 = (Date3 - Date2) / 1000;
+    // var days = Math.floor(res / 86400);  
+    // var hours = Math.floor(res / 3600) % 24;
+    // var minutes = Math.floor(res / 60) % 60;
+    minutes = Math.floor(res / 60) % 60;
+    minute = Math.floor(res1 / 60) % 60;
+    seconds =Math.floor (res % 60);
+    second = Math.floor (res1 % 60);
+    }
+    return res.status(200).json({message:`The time it took for cook to make the order was ${minutes} minutes and ${seconds} seconds.......Also it took ${minute} minutes and ${second} seconds for waiter to deliver it.`});
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
 
 exports.setDiscount = (req,res,next) =>{
   const orderId = req.params.orderId;

@@ -5,7 +5,7 @@ const auth = require('../middleware/is-auth');
 
 const router = express.Router();
 
-// router.post('/addtocart/:productId',auth.auth,cartController.addToCart);
+router.post('/addtocart/:productId',auth.auth,cartController.addToCart);
 
 router.post('/addincart/:product_id',auth.auth,cartController.add);
 

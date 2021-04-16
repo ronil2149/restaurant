@@ -6,6 +6,10 @@ var ItemSchema = new Schema({
     type:Schema.Types.ObjectId,
             ref: 'Product',
   },
+  productId:{
+    type:Schema.Types.ObjectId,
+    ref:'Product'
+  },
   priority:{
     type:Number,
     required:true

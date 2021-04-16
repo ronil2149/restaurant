@@ -62,6 +62,7 @@ exports.login = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     let loadedAll;
+    let loadedActiverole;
 
     All.findOne({  email: email  })
         .then(all => {
@@ -72,6 +73,7 @@ exports.login = (req, res, next) => {
             }
             else if (all.activerole == 'user'){
                 loadedAll = all;
+                loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
                 let accessToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
                 let refreshToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
@@ -79,11 +81,12 @@ exports.login = (req, res, next) => {
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);
                     console.log(accessTokens);
-                    res.status(200).json({message:'Welcome User', your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
+                    res.status(200).json({message:'Welcome User',role:loadedActiverole, your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
                     return loadedAll;
             }}
             else if (all.activerole == 'cook'){
                 loadedAll = all;
+                loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
                 let accessToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
                 let refreshToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
@@ -91,11 +94,12 @@ exports.login = (req, res, next) => {
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);
                     console.log(accessTokens);
-                    res.status(200).json({message:'Welcome Cook', your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
+                    res.status(200).json({message:'Welcome Cook',role:loadedActiverole, your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
                     return loadedAll;
             }}
             else if (all.activerole == 'waiter'){
                 loadedAll = all;
+                loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
                 let accessToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
                 let refreshToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
@@ -103,11 +107,12 @@ exports.login = (req, res, next) => {
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);
                     console.log(accessTokens);
-                    res.status(200).json({message:'Welcome Waiter', your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
+                    res.status(200).json({message:'Welcome Waiter',role:loadedActiverole, your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
                     return loadedAll;
             }}
             else if (all.activerole == 'manager'){
                 loadedAll = all;
+                loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
                 let accessToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
                 let refreshToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
@@ -115,11 +120,12 @@ exports.login = (req, res, next) => {
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);
                     console.log(accessTokens);
-                    res.status(200).json({message:'Welcome Manager', your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
+                    res.status(200).json({message:'Welcome Manager',role:loadedActiverole, your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
                     return loadedAll;
             }}
             else if (all.activerole == 'admin'){
                 loadedAll = all;
+                loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
                 let accessToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
                 let refreshToken = jwt.sign({ email: loadedAll.email, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
@@ -127,7 +133,7 @@ exports.login = (req, res, next) => {
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);
                     console.log(accessTokens);
-                    res.status(200).json({message:'Welcome Admin', your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
+                    res.status(200).json({message:'Welcome Admin',role:loadedActiverole, your_accessToken: accessToken,your_refreshToken: refreshToken, Id: loadedAll._id.toString()});
                     return loadedAll;
             }}
         })
@@ -329,3 +335,30 @@ exports.SwitchRole = (req,res,next) =>{
 }
 
 
+exports.GetEveryone = (req,res,next) =>{
+        const CurrentPage = req.query.page || 1;
+        const perPage = 100;
+        let totalPersons;
+        All.find()
+          .countDocuments()
+          .then(count => {
+            totalPersons = count;
+            return All.find()
+              .skip((CurrentPage - 1) * perPage)
+              .limit(perPage)
+          })
+          .then(all => {
+            res.status(200)
+              .json({
+                message: 'Fetched everyone Successfully',
+                persons: all,
+                totalPersons: totalPersons
+              });
+          })
+          .catch(err => {
+            if (!err.statusCode) {
+              err.statusCode = 500;
+            }
+            next(err);
+          });
+}

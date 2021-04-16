@@ -18,11 +18,14 @@ router.get('/list',orderController.PreparedOrderList);
 
 router.put('/cancel/:orderId',orderController.cancelOrder);
 
+router.get('/howlong/:orderId',orderController.TimeItTook);
 
 router.put('/done/:orderId',orderController.DoneOrder);
 
 router.delete('/delete',auth.auth,orderController.DeleteOrder);
 
 router.put('/setdiscount/:orderId',orderController.setDiscount);
+
+router.put('/serve/:orderId',orderController.ServeOrder);
 
 module.exports = router;

@@ -17,6 +17,7 @@ const ingredientRoutes = require('./routes/ingredients');
 const subcategoryRoutes = require('./routes/mincategory');
 const allRoutes = require('./routes/all');
 const categoryRoutes = require('./routes/category');
+const feedbackRoutes = require('./routes/feedback');
 const app = express();
 
 const upload = multer({
@@ -72,6 +73,7 @@ app.use('/ingredient',ingredientRoutes);
 app.use('/subcategory',subcategoryRoutes);
 app.use('/all',allRoutes);
 app.use('/category',categoryRoutes);
+app.use('/feedback',feedbackRoutes);
 
 
 mongoose.connect('mongodb+srv://mauvais:Mauvais7212@cluster0.gbicb.mongodb.net/myProject?retryWrites=true&w=majority',{ useNewUrlParser: true,useUnifiedTopology: true },)

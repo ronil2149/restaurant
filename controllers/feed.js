@@ -152,7 +152,7 @@ exports.UnavailableItem = (req,res,next) =>{
         loadedProduct.availability = false;
         loadedProduct.save();
         console.log('The process of making an item available has been started....')
-        var job = new CronJob(terminate,'1 * * * * *', function() {
+        var job = new CronJob('1 * * * * *', function() {
           loadedProduct.availability = true;
           loadedProduct.save();         
           console.log(loadedProduct.availability);
@@ -219,8 +219,7 @@ exports.deleteProduct = (req, res, next) => {
       clearImage(product.imageUrl);
       return Product.findByIdAndDelete(productId);
     })
-    return Category.findOne(req.params.categoryId)
-    
+    return Category.findOne(req.params.categoryId)    
     .then(category=>{    
       loadedCategory = category
       category.products.pull(productId); 

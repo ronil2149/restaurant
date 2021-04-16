@@ -6,104 +6,101 @@ const User = require('../models/user');
 const All = require('../models/all');
 let productDetails;
 
-// exports.addToCart = (req, res, next) => {
-//   let token = req.headers['authorization'];
-//   token = token.split(' ')[1];
-//   const productId = req.params.productId;
-//   const priority = req.body.priority;
-//   const qty = Number.parseInt(req.body.qty);
-//   let productDetails;
-//   // let image;
-//   // console.log('qty: ', qty);
+exports.addToCart = (req, res, next) => {
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
+  const productId = req.params.productId;
+  const priority = req.body.priority;
+  const qty = Number.parseInt(req.body.qty);
+  let productDetails;
+  // let image;
+  // console.log('qty: ', qty);
 
-//   Product.findById(productId).populate({
-//     path: "items.productId",
-//     select: "name price description imageUrl "
-//   })
-//     .then(product => {
-//       if (!product) {
-//         return res.status(404).json({ message: "Could not find post" });
-//       }
-//       Id = product._id;
-//       console.log(Id)
-//       productDetails = product.price;
-//       // image = product.imageUrl;
-//     })
+  Product.findById(productId).populate({
+    path: "items.productId",
+    select: "name price description imageUrl "
+  })
+    .then(product => {
+      if (!product) {
+        return res.status(404).json({ message: "Could not find post" });
+      }
+      Id = product._id;
+      productDetails = product.price;
+    })
 
-// All.findOne({email}).populate({
-//   path: "items.productId",
-//   select: "name price description imageUrl "
-// })
-//     .then(all=>{
-//       if(!all){
-//         return res.status(403).json({message:'Register yourself first,will ya?!'})
-//       }
-//       return Cart.findOne({ email }).populate({
-//         path: "items.productId",
-//         select: "name price description imageUrl "
-//       })    
-//     })
-//     .then(cart => {
-//       if (!cart && qty <= 0) {
-//         throw new Error('Invalid request');
-//       } else if (cart) {
-//         const indexFound = cart.items.findIndex(item => {
-//           return item.product_id === productId;
-//         });
-//         if (indexFound !== -1 && qty <= 0) {
-//           cart.items.splice(indexFound, 1);
-//           if (cart.items.length == 0) {
-//             cart.subTotal = 0;
-//           } else {
-//             cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-//           }
-//         } else if (indexFound !== -1) {
-//           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
-//           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
-//           cart.items[indexFound].price = productDetails;
-//           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-//         } else if (qty > 0) {
-//           cart.items.push({
-//             productId :productId,
-//             qty: qty,
-//             priority:priority,
-//             price: productDetails,
-//             total: parseInt(productDetails * qty)
-//           })
-//           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-//         } else {
-//           throw new Error('Invalid request');
-//         }
-//         return cart.save();
-//       } else {
-//         const cartData = {
-//           email: email,          
-//           items: [
-//             {
-//               productId : productId,
-//               qty: qty,
-//               priority: priority,
-//               price: productDetails,
-//               total: productDetails * qty,
+All.findOne({email}).populate({
+  path: "items.productId",
+  select: "name price description imageUrl "
+})
+    .then(all=>{
+      if(!all){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email }).populate({
+        path: "items.productId",
+        select: "name price description imageUrl "
+      })    
+    })
+    .then(cart => {
+      if (!cart && qty <= 0) {
+        throw new Error('Invalid request');
+      } else if (cart) {
+        const indexFound = cart.items.findIndex(item => {
+          return item.product_id === productId;
+        });
+        if (indexFound !== -1 && qty <= 0) {
+          cart.items.splice(indexFound, 1);
+          if (cart.items.length == 0) {
+            cart.subTotal = 0;
+          } else {
+            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+          }
+        } else if (indexFound !== -1) {
+          cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
+          cart.items[indexFound].price = productDetails;
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else if (qty > 0) {
+          cart.items.push({
+            productId :productId,
+            qty: qty,
+            priority:priority,
+            price: productDetails,
+            total: parseInt(productDetails * qty)
+          })
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else {
+          throw new Error('Invalid request');
+        }
+        return cart.save();
+      } else {
+        const cartData = {
+          email: email,          
+          items: [
+            {
+              productId : productId,
+              qty: qty,
+              priority: priority,
+              price: productDetails,
+              total: productDetails * qty,
 
-//             }],
-//           subTotal: parseInt(productDetails * qty)
-//         };
-//         cart = new Cart(cartData);
-//         // return newItem
-//         return cart.save();
-//       }
-//     })
-//     .then(savedCart => {
-//       return res.json(savedCart)
-//     })
-//     .catch(err => {
-//       if (!err.statusCode) {
-//         err.statusCode = 500;
-//       }
-//       next(err);
-//     })
-// };
+            }],
+          subTotal: parseInt(productDetails * qty)
+        };
+        cart = new Cart(cartData);
+        return cart.save();
+      }
+    })
+    .then(savedCart => {
+      return res.json(savedCart)
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    })
+};
 
 
 exports.add = function (req, res, next) {
@@ -226,7 +223,6 @@ exports.subtract = function (req, res, next) {
             cart.items[indexFound].total = updatedTotal;
             cart.items[indexFound].price = updatedPrice;
             cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-
           }
           console.log('after update items: ', cart.items);
           return cart.save();

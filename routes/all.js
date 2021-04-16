@@ -18,4 +18,6 @@ router.put('/updaterole',auth.auth,allController.UpdateRole);
 
 router.put('/switchrole',auth.auth,allController.SwitchRole);
 
+router.get('/geteveryone',allController.GetEveryone);
+
 module.exports = router;
