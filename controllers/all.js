@@ -43,7 +43,7 @@ exports.signup = (req, res, next) => {
         activerole: activerole,
         password: sha1        
     })
-    console.log(all);
+    // console.log(all);
     return all.save()
         .then(all => {
             res.status(201).json({ message: 'Registered sucessfully', Id: all._id });
