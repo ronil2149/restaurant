@@ -9,6 +9,7 @@ const clearImage = filePath => {
   fs.unlink(filePath, err => console.log(err));
 };
 var CronJob = require('cron').CronJob;
+let loadedPrice;
 
 exports.getProducts = (req, res, next) => {
   const CurrentPage = req.query.page || 1;
@@ -45,7 +46,7 @@ exports.createProduct = (req, res, next) => {
   const description = req.body.description;
   const imageUrl = req.file.path;
   let loadedcategory;
-  const price = req.body.price;
+  const originalPrice = req.body.originalPrice;
 
     Category.findById(req.params.categoryId)
     .then(category=>{
@@ -57,19 +58,16 @@ exports.createProduct = (req, res, next) => {
         categoryId : categoryId,
         name:name,
         description:description,
-        price:price,
+        originalPrice:originalPrice,
         imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
       })
-      product.save()
+      product.save();
       loadedCategory = category
       category.products.push(product)
       return category.save();
     })
     .then(result => {
-      res.status(201).json({      
-          message: 'Product created successfully!',
-        product: product
-      });
+      res.status(201).json({message: 'Product created successfully!'});
     })
       .catch(err => {
         if (!err.statusCode) {       
@@ -102,9 +100,11 @@ exports.getProduct =(req, res, next) => {
 
 exports.updateProduct = (req, res, next) => {
   const productId = req.params.productId;
+  const offer = req.body.offer;
   const name = req.body.name;
   const description = req.body.description;
   let imageUrl = req.body.imageUrl;
+  let loadedOffer;
   if (req.file) {
     imageUrl = req.file.path;
   }
@@ -120,16 +120,17 @@ exports.updateProduct = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
-      if (imageUrl !== product.imageUrl) {
-        clearImage(product.imageUrl);
-      }
+      const offers = (product.originalPrice* offer)/100 ;
+      const LoadedPrices = product.originalPrice - offers;
+      product.offerPrice = LoadedPrices;
       product.name = name;
       product.imageUrl = `http://localhost:8080/${imageUrl}`;
+      product.offer = offer;
       product.description = description;
       return product.save();
-    })
+      })
     .then(result => {
-      res.status(200).json({ message: 'Product updated!', post: result });
+      return res.status(200).json({ message: 'Product updated!', post: result ,price:loadedPrice });
     })
     .catch(err => {
       if (!err.statusCode) {
@@ -138,6 +139,18 @@ exports.updateProduct = (req, res, next) => {
       next(err);
     });
 };
+
+exports.Outdated = (req,res,next) =>{
+  const productId = req.params.productId;
+  Product.findById(productId)
+  .then(product =>{  
+    product.offer = 0;
+    product.offerPrice = product.originalPrice;
+    product.save();
+    return res.status(200).json({message:'The offer on this product has been removed',product:product});
+  })
+}
+
 
 exports.UnavailableItem = (req,res,next) =>{
   const productId = req.params.productId;

@@ -12,6 +12,8 @@ router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
 
+router.get('/myorders',auth.auth,orderController.GetMyOrders);
+
 router.put('/receive/:orderId',orderController.receiveOrder);
 
 router.get('/list',orderController.PreparedOrderList);

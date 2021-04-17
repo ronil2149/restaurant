@@ -45,18 +45,10 @@ const allSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref : 'Feedback'
     }],
-    cart:{
-        items:[{
-            productId:{
-                type:Schema.Types.ObjectId,
-                ref:'Cart'
-            },
-            Qty:{
-                type:Number
-            }
-        }],
-        totalPrice: Number
-    },
+    orders:[{
+        type:Schema.Types.ObjectId,
+        ref:'Order'
+    }],
     activerole:{
         type:String,
         required:true,

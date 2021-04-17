@@ -1,6 +1,7 @@
 const Order = require('../models/order');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
+const All = require('../models/all');
 
 
 exports.add = (req,res,next) =>{
@@ -9,6 +10,17 @@ exports.add = (req,res,next) =>{
     token = token.split(' ')[1];
     const paymentMethod = req.body.paymentMethod;  
     let loadedCart;
+    let loadedUser;
+    All.findOne({email})
+    .then(all=>{
+      if(!all){
+        const error = new Error('There are no such persons!!');
+        error.statusCode = 404;
+        throw error;
+      }
+      loadedUser = all;
+      // console.log(loadedUser);
+    })
     Cart.findOne({email})
     .then(cart=>{
         if(!cart){
@@ -29,10 +41,12 @@ exports.add = (req,res,next) =>{
             subTotal: subTotal,
             order: loadedCart
         })
+        loadedUser.orders.push(order);
+        loadedUser.save();
         order.save()
         return res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
         }
-        return res.json({message:"Seems like you made an order already...If not, can you please make anther one using diffrent email?", Your_Order : order})
+        // return res.json({message:"Seems like you made an order already...If not, can you please make anther one using diffrent email?", Your_Order : order})
 
       })
     .catch(err => {
@@ -41,7 +55,26 @@ exports.add = (req,res,next) =>{
       }
       next(err);
     });
+}
 
+exports.GetMyOrders = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
+  All.findOne({email}).populate({path: "orders" })
+  .then(all=>{
+    if(!all){
+      const error = new Error('THere are no such persons!!');
+      error.statusCode = 404;
+      throw error;
+    }
+    return res.status(200).json({message:"here you go..", data:all})
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
 }
 
 
@@ -249,12 +282,13 @@ exports.TimeItTook = (req,res,next) =>{
     // var days = Math.floor(res / 86400);  
     // var hours = Math.floor(res / 3600) % 24;
     // var minutes = Math.floor(res / 60) % 60;
+    hours = Math.floor(res / 3600) % 24;
     minutes = Math.floor(res / 60) % 60;
     minute = Math.floor(res1 / 60) % 60;
     seconds =Math.floor (res % 60);
     second = Math.floor (res1 % 60);
     }
-    return res.status(200).json({message:`The time it took for cook to make the order was ${minutes} minutes and ${seconds} seconds.......Also it took ${minute} minutes and ${second} seconds for waiter to deliver it.`});
+    return res.status(200).json({message:`The time it took for cook to make the order was${hours} : ${minutes} hours and ${seconds} seconds.......Also it took ${minute} minutes and ${second} seconds for waiter to deliver it.`});
   })
   .catch(err => {
     if (!err.statusCode) {

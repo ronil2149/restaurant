@@ -6,7 +6,7 @@ const auth = require('../middleware/is-auth');
 const router = express.Router();
 
 // GET /feed/posts
-router.get('/getposts',auth.auth, feedController.getProducts);
+router.get('/getposts', feedController.getProducts);
 
 // POST /feed/post
 router.post('/create/:categoryId', feedController.createProduct);
@@ -20,6 +20,8 @@ router.get('/getmenu',feedController.getMenu);
 router.get('/product/:productId',feedController.getProduct);
 
 router.put('/update/:productId',feedController.updateProduct);
+
+router.put('/outdate/:productId',feedController.Outdated);
 
 router.delete('/delete/:productId',feedController.deleteProduct);
 
