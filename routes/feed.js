@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/getposts', feedController.getProducts);
 
 // POST /feed/post
-router.post('/create/:categoryId', feedController.createProduct);
+router.post('/:restaurantId/create/:categoryId', feedController.createProduct);
 
 router.put('/itemunavailable/:productId',feedController.UnavailableItem);
 

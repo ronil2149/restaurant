@@ -2,7 +2,7 @@ const Order = require('../models/order');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
 const All = require('../models/all');
-
+let loadedUser;
 
 exports.add = (req,res,next) =>{
     const name = req.body.name;
@@ -28,27 +28,26 @@ exports.add = (req,res,next) =>{
           error.statusCode = 404;
           throw error;
         }
-        loadedCart = cart;
-        subTotal = loadedCart.subTotal;
-        return Order.findOne({email})
+        loadedCart = cart.items;
+        subTotal = cart.subTotal;
+        const order = new Order({
+          name : name,
+          paymentMethod: paymentMethod,
+          email:email,
+          grandTotal: subTotal,
+          userId:id,
+          items: loadedCart
       })
-      .then(order=>{
-        if(!order){
-          const order = new Order({
-            name : name,
-            paymentMethod: paymentMethod,
-            email:email,
-            subTotal: subTotal,
-            order: loadedCart
-        })
-        loadedUser.orders.push(order);
-        loadedUser.save();
-        order.save()
-        return res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
-        }
-        // return res.json({message:"Seems like you made an order already...If not, can you please make anther one using diffrent email?", Your_Order : order})
-
-      })
+      loadedUser.orders.push(order);
+      loadedUser.save();
+      order.save();
+      res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
+      return Cart.findOneAndDelete({email})
+    })
+    .then(cart=>{
+      cart.remove();
+      
+    })
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;

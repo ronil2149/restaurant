@@ -25,7 +25,8 @@ exports.addToCart = (req, res, next) => {
         return res.status(404).json({ message: "Could not find post" });
       }
       Id = product._id;
-      productDetails = product.price;
+      productDetails = product.offerPrice;
+      console.log(productDetails)
     })
 
 All.findOne({email}).populate({

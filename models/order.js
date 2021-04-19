@@ -45,7 +45,11 @@ const OrderSchema = new Schema({
         'The value of path {PATH} ({VALUE}) is not a valid email address.'
       ]
     },
-    subTotal: {
+    userId:{
+      type:Schema.Types.ObjectId,
+      ref:'User'
+    },
+    grandTotal: {
       default: 0,
       type: Number
   },
@@ -53,7 +57,7 @@ const OrderSchema = new Schema({
     type: String,
     default: 'cash'
   },
-  order: [CartSchema],
+  items: [ItemSchema],
   OrderIs:{
     type:String
   },

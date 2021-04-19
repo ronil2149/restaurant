@@ -29,6 +29,7 @@ exports.signup = (req, res, next) => {
         error.data = errors.array();
         throw error;
     }
+    const restaurantId = req.params.restaurantId;
     const email = req.body.email;
     const phone = req.body.phone;
     const name = req.body.name;
@@ -256,7 +257,7 @@ exports.getSomeone = (req,res,next) =>{
     })
         .then(all=>{
             if(!all){
-                return res.status(404).json({message:"There are no person with such roles"});
+                return res.status(404).json({message:"There are no person!!"});
             }
             else if(activerole == ""){
                 return res.status(404).json({message:"There are no person with such roles"});

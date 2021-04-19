@@ -18,6 +18,7 @@ const subcategoryRoutes = require('./routes/mincategory');
 const allRoutes = require('./routes/all');
 const categoryRoutes = require('./routes/category');
 const feedbackRoutes = require('./routes/feedback');
+const RestaurantRoutes = require('./routes/restaurant');
 const app = express();
 
 const upload = multer({
@@ -74,6 +75,7 @@ app.use('/subcategory',subcategoryRoutes);
 app.use('/all',allRoutes);
 app.use('/category',categoryRoutes);
 app.use('/feedback',feedbackRoutes);
+app.use('/restaurant',RestaurantRoutes);
 
 
 mongoose.connect('mongodb+srv://mauvais:Mauvais7212@cluster0.gbicb.mongodb.net/myProject?retryWrites=true&w=majority',{ useNewUrlParser: true,useUnifiedTopology: true },)
@@ -81,3 +83,4 @@ mongoose.connect('mongodb+srv://mauvais:Mauvais7212@cluster0.gbicb.mongodb.net/m
     app.listen(8080);
 })
 .catch(err=>console.log(err))
+

@@ -4,7 +4,7 @@ const router = express.Router();
 const allController = require('../controllers/all');
 const auth = require('../middleware/is-auth');
 
-router.put('/register',allController.signup);
+router.put('/:restaurantId/register',allController.signup);
 
 router.post('/login',allController.login);
 

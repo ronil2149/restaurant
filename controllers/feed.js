@@ -41,6 +41,7 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.createProduct = (req, res, next) => {
+  const restaurantId = req.params.restaurantId;
   const categoryId = req.params.categoryId;
   const name = req.body.name;
   const description = req.body.description;
@@ -59,6 +60,7 @@ exports.createProduct = (req, res, next) => {
         name:name,
         description:description,
         originalPrice:originalPrice,
+        offerPrice:originalPrice,
         imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
       })
       product.save();
