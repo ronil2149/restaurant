@@ -15,6 +15,8 @@ router.put('/itemunavailable/:productId',feedController.UnavailableItem);
 
 router.put('/itemavailable/:productId',feedController.ItemAvailable);
 
+router.put('/unavailable/:productId',feedController.ItemUnavailable);
+
 router.get('/getmenu',feedController.getMenu);
 
 router.get('/product/:productId',feedController.getProduct);

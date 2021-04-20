@@ -59,7 +59,10 @@ exports.add = (req,res,next) =>{
 exports.GetMyOrders = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
-  All.findOne({email}).populate({path: "orders" })
+  All.findOne({email}).populate({path:"orders",populate:{
+    path: "items.productId"
+  }
+})
   .then(all=>{
     if(!all){
       const error = new Error('THere are no such persons!!');
@@ -305,8 +308,8 @@ exports.setDiscount = (req,res,next) =>{
     if(!order){
       return res.status(404).json({message:"There are no such order!!"});
     }
-    const offer = (order.subTotal)/100 * discount;
-    order.subTotal = order.subTotal - offer ;
+    const offer = (order.grandTotal)/100 * discount;
+    order.grandTotal = order.grandTotal - offer ;
     order.save();
     return res.status(200).json({message:"Sorry for the difficulties...here let us help you with your order",order:order});
   })

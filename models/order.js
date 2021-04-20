@@ -69,7 +69,11 @@ const OrderSchema = new Schema({
   },
   OrderServedAt:{
     type:Date
-  }
+  },
+  complaints:[{
+    type:Schema.Types.ObjectId,
+    ref:'Complaint'
+  }]
 
 },{
   timestamps: true

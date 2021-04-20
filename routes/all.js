@@ -16,6 +16,8 @@ router.post('/reset',allController.reset);
 
 router.put('/updaterole',auth.auth,allController.UpdateRole);
 
+router.delete('/delete/:allId',allController.DeleteSomeone);
+
 router.put('/switchrole',auth.auth,allController.SwitchRole);
 
 router.get('/geteveryone',allController.GetEveryone);

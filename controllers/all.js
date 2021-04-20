@@ -1,5 +1,6 @@
-var All = require('../models/all');
+const All = require('../models/all');
 const auth = require('../middleware/is-auth');
+const Restaurant = require('../models/restaurant'); 
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -10,6 +11,7 @@ const key = "supersecretKey";
 const OTP = require('../models/otp');
 const jwt = require('jsonwebtoken');
 const FeedBack = require('../models/feedback');
+const restaurant = require('../models/restaurant');
 const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, Number: true, alphabets: false });
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -37,20 +39,31 @@ exports.signup = (req, res, next) => {
     const activerole = req.body.activerole;
     const roles = req.body.roles;
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
-    const all = new All({
-        name: name,
-        email: email,
-        phone: phone,
-        activerole: activerole,
-        password: sha1        
+
+    Restaurant.findById(restaurantId)
+    .then(restaurant =>{
+        if(!restaurant){
+            const error = new Error('There are no such restaurants')
+            error.statusCode = 404;
+            throw error;
+        }
+        else{
+            const all = new All({
+                name: name,
+                email: email,
+                phone: phone,
+                activerole: activerole,
+                restaurantId:restaurantId,
+                password: sha1        
+            })
+            return all.save();
+            }       
     })
-    // console.log(all);
-    return all.save()
-        .then(all => {
-            res.status(201).json({ message: 'Registered sucessfully', Id: all._id });
-        })
-        .catch(err => {
-            if (!err.statusCode) {
+    .then(all=>{
+        return res.status(201).json({ message: 'Registered sucessfully', Id: all._id });
+    })
+    .catch(err => {
+        if (!err.statusCode) {
                 err.statusCode = 500;
                 return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added the right credentials?"})
             }
@@ -147,7 +160,7 @@ exports.login = (req, res, next) => {
         })
         .catch(err => {
             if (!err.statusCode) {
-                err.statusCode = 500;
+                err.statusCode = 500;e
             }
             next(err);
         });
@@ -362,4 +375,29 @@ exports.GetEveryone = (req,res,next) =>{
             }
             next(err);
           });
+}
+
+
+
+exports.DeleteSomeone = (req,res,next) =>{
+    const allId = req.params.allId;
+    All.findByIdAndDelete(allId)
+        .then(all=>{
+            if(!all){
+                const error= new Error('There are no such persons');
+                error.statusCode = 404;
+                throw error;
+            }
+            else{
+                all.remove();
+                return res.status(200).json({message:"Deleted successfully :) "});
+            }
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+              err.statusCode = 500;
+            }
+            next(err);
+          });
+
 }

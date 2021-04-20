@@ -57,7 +57,11 @@ const allSchema = new Schema({
     roles:{
         type:[String],
         default:['user']
-    }
+    },
+    restaurantId:[{
+        type:Schema.Types.ObjectId,
+        ref:'Restaurant'
+    }],
 },{timestamps: { createdAt: 'created_At', updatedAt: 'updated_At', expireAt:'expired_at' }});
 
 allSchema.methods.addtocart = function(product){

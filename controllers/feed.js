@@ -105,7 +105,7 @@ exports.updateProduct = (req, res, next) => {
   const offer = req.body.offer;
   const name = req.body.name;
   const description = req.body.description;
-  let imageUrl = req.body.imageUrl;
+  let imageUrl = req.path.imageUrl;
   let loadedOffer;
   if (req.file) {
     imageUrl = req.file.path;
@@ -151,6 +151,12 @@ exports.Outdated = (req,res,next) =>{
     product.save();
     return res.status(200).json({message:'The offer on this product has been removed',product:product});
   })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
 }
 
 
@@ -194,6 +200,25 @@ exports.ItemAvailable = (req,res,next) =>{
       product.availability = true;
       product.save();
       return res.status(200).json({message:'Product is now available'});
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+}
+
+exports.ItemUnavailable =(req,res,next) =>{
+  const productId = req.params.productId;
+  Product.findById(productId)
+    .then(product=>{
+      if(!product){
+        return res.status(404).json({message:'There are no such product'});
+      }
+      product.availability = false;
+      product.save();
+      return res.status(200).json({message:"Product's availability is now set to unavailable"});
     })
     .catch(err => {
       if (!err.statusCode) {

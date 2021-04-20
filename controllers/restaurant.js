@@ -18,7 +18,8 @@ exports.MakeRestaurant = (req,res,next) =>{
         RestaurantName:RestaurantName
     })
     resto.save();
-    return res.status(201).json({message:"Restaurant created!"})
+    console.log(resto);
+    return res.status(201).json({message:"Restaurant created!" , RestaurantId : resto._id})
 
 
 
