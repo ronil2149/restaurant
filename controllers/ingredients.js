@@ -15,7 +15,7 @@ exports.createIngredient = (req,res,next) =>{
     let creator;
     const ingredient = new Ingredient({
       IngredientName: IngredientName,
-      imageUrl: `http://192.168.0.5:8080/${imageUrl}`,
+      imageUrl: `http://192.168.0.4:8080/${imageUrl}`,
       price:price,
       description: description,
       creator: {name:'Manager'}

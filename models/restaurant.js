@@ -4,9 +4,19 @@ const Schema = mongoose.Schema;
 
 const restaurantSchema = new Schema({
   RestaurantName:{
-      type:String
+      type:String,
+      required:true
+  },
+  activity:{
+    type:Boolean,
+    default:null
+  },
+  ActivatedAt:{
+    type:Date
+  },
+  DeactivatedAt:{
+    type:Date
   }
-  // ...other fields
 },{
   timestamps:true
 });

@@ -10,6 +10,6 @@ router.post('/year',RevenueController.GetByYear);
 
 router.post('/date',RevenueController.DateWise);
 
-router.post('/sum',RevenueController.Sum);
+router.get('/sum',RevenueController.Sum);
 
 module.exports = router;

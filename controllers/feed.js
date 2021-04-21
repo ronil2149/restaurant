@@ -61,7 +61,7 @@ exports.createProduct = (req, res, next) => {
         description:description,
         originalPrice:originalPrice,
         offerPrice:originalPrice,
-        imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
+        imageUrl: `http://192.168.0.4:8080/${imageUrl}`,
       })
       product.save();
       loadedCategory = category

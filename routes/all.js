@@ -4,13 +4,13 @@ const router = express.Router();
 const allController = require('../controllers/all');
 const auth = require('../middleware/is-auth');
 
-router.put('/:restaurantId/register',allController.signup);
+router.put('/register',allController.signup);
 
 router.post('/login',allController.login);
 
 router.post('/forgot',auth.auth,allController.forgot);
 
-router.get('/get',allController.getSomeone);
+router.post('/get',allController.getSomeone);
 
 router.post('/reset',allController.reset);
 

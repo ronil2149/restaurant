@@ -39,26 +39,34 @@ exports.signup = (req, res, next) => {
     const activerole = req.body.activerole;
     const roles = req.body.roles;
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
-
-    Restaurant.findById(restaurantId)
-    .then(restaurant =>{
-        if(!restaurant){
-            const error = new Error('There are no such restaurants')
-            error.statusCode = 404;
-            throw error;
-        }
-        else{
-            const all = new All({
-                name: name,
-                email: email,
-                phone: phone,
-                activerole: activerole,
-                restaurantId:restaurantId,
-                password: sha1        
-            })
-            return all.save();
-            }       
+    const all = new All({
+        name: name,
+        email: email,
+        phone: phone,
+        activerole: activerole,
+        restaurantId:restaurantId,
+        password: sha1        
     })
+    return all.save()
+    // Restaurant.findById(restaurantId)
+    // .then(restaurant =>{
+    //     if(!restaurant){
+    //         const error = new Error('There are no such restaurants')
+    //         error.statusCode = 404;
+    //         throw error;
+    //     }
+    //     else{
+    //         const all = new All({
+    //             name: name,
+    //             email: email,
+    //             phone: phone,
+    //             activerole: activerole,
+    //             restaurantId:restaurantId,
+    //             password: sha1        
+    //         })
+    //         return all.save();
+    //         }       
+    // })
     .then(all=>{
         return res.status(201).json({ message: 'Registered sucessfully', Id: all._id });
     })

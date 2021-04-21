@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/getposts', feedController.getProducts);
 
 // POST /feed/post
-router.post('/:restaurantId/create/:categoryId', feedController.createProduct);
+router.post('/create/:categoryId', feedController.createProduct);
 
 router.put('/itemunavailable/:productId',feedController.UnavailableItem);
 
@@ -17,7 +17,7 @@ router.put('/itemavailable/:productId',feedController.ItemAvailable);
 
 router.put('/unavailable/:productId',feedController.ItemUnavailable);
 
-router.get('/getmenu',feedController.getMenu);
+router.post('/getmenu',feedController.getMenu);
 
 router.get('/product/:productId',feedController.getProduct);
 
