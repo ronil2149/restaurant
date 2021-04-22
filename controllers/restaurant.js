@@ -5,13 +5,6 @@ const Restaurant = require('../models/restaurant');
 
 exports.MakeRestaurant = async (req,res,next) =>{
     const RestaurantName = req.body.RestaurantName;
-//  mongoose.connect('mongodb://localhost/default').Restaurant;
-// const db = mongoose.connection;
-// db.on('error', console.error.bind(console, 'connection error:'));
-// db.once('open', () => {
-//   console.log('connected');
-// });
-
     const restaurant =await new Restaurant({
         RestaurantName:RestaurantName
     })
