@@ -10,6 +10,10 @@ var ItemSchema = new Schema({
     type:Schema.Types.ObjectId,
     ref:'Product'
   },
+  ingredientId:{
+    type:Schema.Types.ObjectId,
+    ref:'Ingredient'
+  },
   priority:{
     type:Number,
     required:true
@@ -19,13 +23,16 @@ var ItemSchema = new Schema({
     required: true,
     min: [1, 'Quantity can not be less then 1.']
   },
-  price: {
+  productPrice: {
     type: Number,
             required: true,
         },
-        total: {
-            type: Number,
-            required: true,
+  ingredientPrice:{
+    type:Number
+  },
+  total: {
+      type: Number,
+      required: true,
         }
 });
 const CartSchema = new Schema({

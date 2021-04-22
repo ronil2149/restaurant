@@ -4,6 +4,8 @@ const RevenueController = require('../controllers/revenue');
 
 router.post('/revenuedaily', RevenueController.GetByDay);
 
+router.post('/dates',RevenueController.Accordingly);
+
 router.post('/month',RevenueController.GetByMonth);
 
 router.post('/year',RevenueController.GetByYear);

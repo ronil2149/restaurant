@@ -6,6 +6,10 @@ var ItemSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
   },
+  ingredientId:{
+    type:Schema.Types.ObjectId,
+    ref:'Ingredient'
+  },
   qty: {
     type: Number,
     required: true,
@@ -14,13 +18,16 @@ var ItemSchema = new Schema({
   priority:{
     type:Number
   },
-  price: {
+  productPrice: {
     type: Number,
             required: true,
-        },
-        total: {
-            type: Number,
-            required: true,
+  },
+  ingredientPrice:{
+    type:Number
+  },
+  total: {
+          type: Number,
+          required: true,
         }
 });
 const CartSchema = new Schema({

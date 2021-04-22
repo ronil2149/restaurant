@@ -4,20 +4,22 @@ const Cart = require('../models/Cart2');
 const Product = require('../models/product');
 const User = require('../models/user');
 const All = require('../models/all');
+const Ingredient = require('../models/ingredients');
 let productDetails;
 
 exports.addToCart = (req, res, next) => {
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
-  const productId = req.params.productId;
+  var productId = req.params.productId;
+  var ingredientId = req.params.ingredientId;
   const priority = req.body.priority;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
+  let Ingprice;
+  console.log(req.params)
 
-  Product.findById(productId).populate({
-    path: "cart.items.productId",
-    select: "name price description imageUrl "
-  })
+  if (ingredientId == undefined){
+    Product.findById(productId)
     .then(product => {
       if (!product) {
         return res.status(404).json({ message: "Could not find post" });
@@ -26,18 +28,12 @@ exports.addToCart = (req, res, next) => {
       productDetails = product.offerPrice;
     })
 
-All.findOne({email}).populate({
-  path: "items.productId",
-  select: "name price description imageUrl "
-})
+All.findOne({email})
     .then(all=>{
       if(!all){
         return res.status(403).json({message:'Register yourself first,will ya?!'})
       }
-      return Cart.findOne({ email }).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      })    
+      return Cart.findOne({ email })
     })
     .then(cart => {
       if (!cart && qty <= 0) {
@@ -55,16 +51,16 @@ All.findOne({email}).populate({
           }
         } else if (indexFound !== -1) {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
-          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
-          cart.items[indexFound].price = productDetails;
+          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails ;
+          cart.items[indexFound].productPrice = productDetails;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
           cart.items.push({
             productId :productId,
             qty: qty,
             priority:priority,
-            price: productDetails,
-            total: parseInt(productDetails * qty)
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty))
           })
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else {
@@ -72,14 +68,12 @@ All.findOne({email}).populate({
         }
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
+        path: " items.productId"
       }).exec((err,cart)=> {
-        res.json({
+        return res.json({
                     status: 'success',
                     message: "product added in cart successfully",
                     cart:cart
-                    // comment: item.comments.id(comment._id)
                 });
       })
         })
@@ -91,17 +85,15 @@ All.findOne({email}).populate({
               productId : productId,
               qty: qty,
               priority: priority,
-              price: productDetails,
-              total: productDetails * qty,
-
+              productPrice: productDetails,
+              total: parseInt((productDetails * qty))
             }],
-          subTotal: parseInt(productDetails * qty)
+            subTotal : parseInt((productDetails * qty))
         };
         cart = new Cart(cartData);
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
+        path: "items.productId"
       }).exec((err,cart)=> {
         res.json({
                     status: 'success',
@@ -118,7 +110,118 @@ All.findOne({email}).populate({
       }
       next(err);
     })
+}
+
+
+else {
+  Product.findById(productId)
+    .then(product => {
+      if (!product) {
+        return res.status(404).json({ message: "Could not find post" });
+      }
+      Id = product._id;
+      productDetails = product.offerPrice;
+    })
+
+    Ingredient.findById(ingredientId)
+    .then(ingredient => {
+      if (!ingredient) {
+        return res.status(404).json({ message: "Could not find ingredient" });
+      }
+      Ingprice = ingredient.price;
+    })
+
+
+All.findOne({email})
+    .then(all=>{
+      if(!all){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email })
+    })
+    .then(cart => {
+      if (!cart && qty <= 0) {
+        throw new Error('Invalid request');
+      } else if (cart) {
+        const indexFound = cart.items.findIndex(item => {
+          return item.product_id === productId;
+        });
+        if (indexFound !== -1 && qty <= 0) {
+          cart.items.splice(indexFound, 1);
+          if (cart.items.length == 0) {
+            cart.subTotal = 0;
+          } else {
+            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+          }
+        } else if (indexFound !== -1) {
+          cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails ;
+          cart.items[indexFound].productPrice = productDetails;
+          cart.items[indexFound].ingredientPrice = Ingprice;
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else if (qty > 0) {
+          cart.items.push({
+            productId :productId,
+            ingredientId : ingredientId,
+            qty: qty,
+            priority:priority,
+            ingredientPrice:Ingprice,
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty)+ (Ingprice * qty))
+          })
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else {
+          throw new Error('Invalid request');
+        }
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: "items.productId"
+      }).exec((err,cart)=> {
+        return res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        })
+      } else {
+        const cartData = {
+          email: email,          
+          items: [
+            {
+              productId : productId,
+              ingredientId : ingredientId,
+              qty: qty,
+              priority: priority,
+              productPrice: productDetails,
+              ingredientPrice:Ingprice,
+              total: parseInt((productDetails * qty) + (Ingprice * qty))
+            }],
+            subTotal : parseInt((productDetails * qty) + (Ingprice * qty))
+        };
+        cart = new Cart(cartData);
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+            path: "items.productId"
+          }).exec((err,cart)=> {
+        res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        });
+      }
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    })
+}
 };
+  
 
 
 exports.add = function (req, res, next) {
@@ -128,10 +231,7 @@ exports.add = function (req, res, next) {
   const qty = Number.parseInt(req.body.qty);
   const priority = req.body.priority;
 
-  Product.findById(product_id).populate({
-    path: "items.productId",
-    select: "name price description imageUrl "
-  })
+  Product.findById(product_id)
     .then(product => {
       if (!product) {
         return res.status(404).json({ message: "Could not find post" });

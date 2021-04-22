@@ -4,7 +4,6 @@ const IngredientController = require('../controllers/ingredients');
 
 const router = express.Router();
 
-
 router.post('/addingredient', IngredientController.createIngredient);
 
 router.get('/getIngredients',IngredientController.getIngredients);

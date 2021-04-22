@@ -94,3 +94,37 @@ exports.DateWise = (req, res) => {
     })
     .catch(error => console.error(error))
 }
+
+
+exports.Accordingly = (req, res) => {
+  const startdate= req.body.startdate;
+  const enddate= req.body.enddate;
+  
+  Order.aggregate([
+    {
+           $match: {
+              createdAt: {
+                 $gte: new Date(startdate),
+                 $lte: new Date(enddate)
+              }
+           }
+        }, {
+     $group: {
+        _id: 1,
+        SUM: {
+           $sum: "$grandTotal"
+        },
+        COUNT: {
+           $sum: 1
+       }
+     }
+     }],
+function(err, result) {
+  if (err) {
+    res.send(err);
+  } else {
+    res.json(result);
+  }
+})
+.catch(error => console.error(error))
+};
