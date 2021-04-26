@@ -21,4 +21,7 @@ router.put('/pending/:restaurantId',RestaurantController.PaymentPending);
 
 router.put('/paymentdone/:restaurantId',RestaurantController.paymentDone);
 
+router.post('/makepayment/:restaurantId',RestaurantController.MakePayment);
+
+router.get('/history/:restaurantId',RestaurantController.ViewHistory);
 module.exports = router;

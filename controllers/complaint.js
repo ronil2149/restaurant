@@ -14,7 +14,7 @@ exports.MakeComplaint = (req,res,next)=>{
            const error = new Error('An order with this id could not be found');
            error.statusCode = 401;
            throw error;
-       }
+       } 
        const complaint = new Complaint({
            title: title,
            message: message,

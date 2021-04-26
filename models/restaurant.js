@@ -19,7 +19,11 @@ const restaurantSchema = new Schema({
   },
   DeactivatedAt:{
     type:Date
-  }
+  },
+  payments:[{
+    type:Schema.Types.ObjectId,
+    ref:'Payment'
+  }],
 },{
   timestamps:true
 });

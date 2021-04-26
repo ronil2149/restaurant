@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-
+const Payment = require('../models/payment');
+const restaurant = require('../models/restaurant');
 const Restaurant = require('../models/restaurant');
 
 
@@ -233,4 +233,63 @@ exports.paymentDone = (req,res,next) =>{
             }
             next(err);
         })
+}
+
+
+exports.MakePayment = (req,res,next) =>{
+    const restaurantId = req.params.restaurantId;
+    const amount = req.body.amount;
+    const paidVia = req.body.paidVia;
+
+    Restaurant.findById(restaurantId)
+    .then(restaurant =>{
+        if(!restaurant){
+            const error = new Error('There are no such restaurant');
+            error.statusCode = 404;
+            return res.status(404).json({message:"There are no such restaurants", error:error}) 
+        }
+        else{
+            const payment = new Payment({
+                restaurantId : restaurantId,
+                amount : amount,
+                paidVia : paidVia
+            })
+            payment.save();
+            restaurant.payment = "done";
+            restaurant.activity = true;
+            restaurant.ActivatedAt = Date.now();
+            restaurant.payments.push(payment);
+            restaurant.save();
+            return res.status(200).json({message:"Payment's done!!", restaurant: restaurant})
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    })
+}
+
+exports.ViewHistory = (req,res,next) =>{
+    const restaurantId = req.params.restaurantId;
+
+    Restaurant.findById(restaurantId).populate({path:"payments"})
+    .then(restaurant=>{
+        if(!restaurant){
+            const error = new Error('There are no such restaurant!');
+            error.statusCode = 404;
+            return res.json({error});
+        }
+        else{
+            return res.status(200).json({message:"Here you go..." , restaurant : restaurant})
+
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    })
 }
