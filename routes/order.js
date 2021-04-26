@@ -16,7 +16,7 @@ router.get('/myorders',auth.auth,orderController.GetMyOrders);
 
 router.put('/receive/:orderId',orderController.receiveOrder);
 
-router.post('/list',orderController.PreparedOrderList);
+router.put('/list',orderController.PreparedOrderList);
 
 router.put('/cancel/:orderId',orderController.cancelOrder);
 

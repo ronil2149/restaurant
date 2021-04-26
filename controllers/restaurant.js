@@ -186,3 +186,51 @@ exports.TotalRestaurants = (req,res,next) =>{
             next(err);
         })
 }
+
+exports.PaymentPending = (req,res,next) =>{
+    const restaurantId = req.params.restaurantId;
+
+    Restaurant.findById(restaurantId)
+        .then(restaurant=>{
+            if(!restaurant){
+                const error = new Error('There are no such restaurantts !!!');
+                error.statusCode = 404;
+                return res.status(404).json({message:'There are no such restaurants!!'})
+            }
+            else{
+                restaurant.payment = "pending";
+                restaurant.save();
+                return res.status(200).json({message:"Payment status is now set to pending for this restaurant", restaurant:restaurant});
+            }
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
+}
+
+
+exports.paymentDone = (req,res,next) =>{
+    const restaurantId = req.params.restaurantId;
+    Restaurant.findById(restaurantId)
+        .then(restaurant=>{
+            if(!restaurant){
+                const error = new Error('There are no such restaurantts !!!');
+                error.statusCode = 404;
+                return res.status(404).json({message:'There are no such restaurants!!'})
+            }
+            else{
+                restaurant.payment = "done";
+                restaurant.save();
+                return res.status(200).json({message:"Payment status is now set to pending for this restaurant", restaurant:restaurant});
+            }
+        })
+        .catch(err => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
+}

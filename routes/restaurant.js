@@ -17,4 +17,8 @@ router.get('/totalrestaurants',RestaurantController.TotalRestaurants);
 
 router.get('/time/:restaurantId',RestaurantController.TimeItTook);
 
+router.put('/pending/:restaurantId',RestaurantController.PaymentPending);
+
+router.put('/paymentdone/:restaurantId',RestaurantController.paymentDone);
+
 module.exports = router;

@@ -87,12 +87,15 @@ exports.GetMyOrders = (req,res,next) =>{
 
 exports.getOrder = (req,res,next) =>{
     const orderId = req.params.orderId;
-    Order.findById(orderId)
+    Order.findById(orderId).populate({path:"items",populate:{
+      path: "productId"
+    }
+  })
     .then(order=>{
         if(!order){
             return res.status(404).json({message:"please make an order first :)"})
         }
-        return res.status(200).json({message:"your order", order:order})
+        return res.status(200).json({message:"The order", order:order})
     })
     .catch(err => {
       if (!err.statusCode) {
@@ -108,11 +111,17 @@ exports.getOrders = (req, res, next) => {
     const CurrentPage = req.query.page || 1;
     const perPage = 20;
     let totalItems;
-    Order.find()
+    Order.find().populate({path:"items",populate:{
+      path: "productId"
+    }
+  })
       .countDocuments()
       .then(count => {
         totalItems = count;
-        return Order.find()
+        return Order.find().populate({path:"items",populate:{
+          path: "productId"
+        }
+      })
           .skip((CurrentPage - 1) * perPage)
           .limit(perPage)
       })
@@ -167,7 +176,6 @@ exports.cancelOrder = (req,res,next) =>{
         }
         order.OrderIs = 'Cancelled';
         order.save();
-        console.log(order.order[0].items[0].productId)
         return Product.find()
     }).then(count => {
         totalItems = count;
@@ -194,7 +202,7 @@ exports.DeleteOrder =  (req, res, next) => {
   Order.findOne({ email })
   .then(order=>{
     if(!order){
-        return res.status(404).json('Order does not exist')
+        return res.status(404).json('Order does not exist');
     }
     order.remove()
   })

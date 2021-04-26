@@ -14,6 +14,9 @@ const restaurantSchema = new Schema({
   ActivatedAt:{
     type:Date
   },
+  payment:{
+    type:String
+  },
   DeactivatedAt:{
     type:Date
   }

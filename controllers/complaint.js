@@ -15,7 +15,6 @@ exports.MakeComplaint = (req,res,next)=>{
            error.statusCode = 401;
            throw error;
        }
-      //  console.log(order)
        const complaint = new Complaint({
            title: title,
            message: message,
@@ -44,7 +43,7 @@ exports.GetComplaints = (req, res, next) => {
       .countDocuments()
       .then(count => {
         totalItems = count;
-        return Complaint.find()
+        return Complaint.find().populate({path:"orderId"})
           .skip((CurrentPage - 1) * perPage)
           .limit(perPage)
       })
@@ -68,7 +67,7 @@ exports.GetComplaints = (req, res, next) => {
 
   exports.GetOne = (req, res, next) => {
     const complaintId = req.params.complaintId;
-    Complaint.findById(complaintId)
+    Complaint.findById(complaintId).populate({path:"orderId"})
       .then(complaint => {
         if (!complaint) {
           const error = new Error('Could not find complaint.');
@@ -77,7 +76,6 @@ exports.GetComplaints = (req, res, next) => {
         }
         res.status(200).json({ message: 'complaint fetched.', complaint: complaint });
       })
-      
       .catch(err => {
         if (!err.statusCode) {
           err.statusCode = 500;
