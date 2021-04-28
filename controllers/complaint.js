@@ -1,14 +1,20 @@
 const Complaint = require('../models/complaint');
 const Order = require('../models/order');
+const All = require('../models/all');
 
 exports.MakeComplaint = (req,res,next)=>{
+  const title = req.body.title;
+  const message = req.body.message;
     const orderId = req.params.orderId;
+    let loadedAll;
     let token = req.headers['authorization'];
     token = token.split(' ')[1];
-    const order = req.params.order;
-    const title = req.body.title;
-    const message = req.body.message;
-    Order.findById(orderId)
+    All.findById(id)
+    .then(all=>{
+      // console.log(all);
+      loadedAll  = all;
+      return  Order.findById(orderId)
+    })  
     .then(order => {
        if (!orderId) {
            const error = new Error('An order with this id could not be found');
@@ -19,11 +25,14 @@ exports.MakeComplaint = (req,res,next)=>{
            title: title,
            message: message,
            orderId:orderId,
-           user:id
+           userId:id
        })
        complaint.save();
        order.complaints.push(complaint);
        order.save();
+       loadedAll.complaints.push(complaint);
+       loadedAll.save();
+      //  console.log(loadedAll)
        return res.status(200).json({message:'complaint saved!',complaint:complaint});
    })
    .catch(err => {
@@ -43,7 +52,7 @@ exports.GetComplaints = (req, res, next) => {
       .countDocuments()
       .then(count => {
         totalItems = count;
-        return Complaint.find().populate({path:"orderId"})
+        return Complaint.find().populate({path:"orderId"}).populate({path:"userId"})
           .skip((CurrentPage - 1) * perPage)
           .limit(perPage)
       })
@@ -65,9 +74,10 @@ exports.GetComplaints = (req, res, next) => {
   }
 
 
+
   exports.GetOne = (req, res, next) => {
     const complaintId = req.params.complaintId;
-    Complaint.findById(complaintId).populate({path:"orderId"})
+    Complaint.findById(complaintId).populate({path:"userId"}).populate({path:"orderId"})
       .then(complaint => {
         if (!complaint) {
           const error = new Error('Could not find complaint.');

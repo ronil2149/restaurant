@@ -30,7 +30,7 @@
         feedback.save();
         all.feedbacks.push(feedback);
         all.save();
-        return res.status(200).json({message:'Feedback saved!', feedback:feedback});
+        return res.status(200).json({message:'Thank you for your feedback', feedback:feedback});
     })
     .catch(err => {
         if (!err.statusCode) {

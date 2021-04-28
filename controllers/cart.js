@@ -111,8 +111,6 @@ All.findOne({email})
       next(err);
     })
 }
-
-
 else {
   Product.findById(productId)
     .then(product => {
@@ -366,8 +364,9 @@ exports.get = (req, res, next) => {
     return res.status(200).json({message:'Enter a valid email first'})
   }
   Cart.findOne({email:email}).populate({
-    path: "items.productId",
-    select: "name price description imageUrl "
+    path: "items.productId"
+  }).populate({
+    path: "items.ingredientId"
   })
     .then(cart=>{
       if(!cart){

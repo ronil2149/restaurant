@@ -324,7 +324,7 @@ exports.setDiscount = (req,res,next) =>{
     const offer = (order.grandTotal)/100 * discount;
     order.grandTotal = order.grandTotal - offer ;
     order.save();
-    return res.status(200).json({message:"Sorry for the difficulties...here let us help you with your order",order:order});
+    return res.status(200).json({message:"Sorry for the difficulties...here,let us help you with your order",order:order});
   })
   .catch(err => {
     if (!err.statusCode) {

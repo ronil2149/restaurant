@@ -62,6 +62,10 @@ const allSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:'Restaurant'
     }],
+    complaints:[{
+        type:Schema.Types.ObjectId,
+        ref:'Complaint'
+    }]
 },{timestamps: { createdAt: 'created_At', updatedAt: 'updated_At', expireAt:'expired_at' }});
 
 allSchema.methods.addtocart = function(product){
