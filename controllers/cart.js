@@ -10,13 +10,13 @@ let productDetails;
 exports.addToCart = (req, res, next) => {
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
-  var productId = req.params.productId;
-  var ingredientId = req.params.ingredientId;
+  const productId = req.params.productId;
+  const ingredientId = req.params.ingredientId;
   const priority = req.body.priority;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
   let Ingprice;
-  console.log(req.params)
+  
 
   if (ingredientId == undefined){
     Product.findById(productId)
@@ -222,28 +222,32 @@ All.findOne({email})
   
 
 
-exports.add = function (req, res, next) {
+exports.add =  (req, res, next) => {
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
   const product_id = req.params.product_id;
+  const ingredientId = req.params.ingredientId;
   const qty = Number.parseInt(req.body.qty);
   const priority = req.body.priority;
+  let productDetails;
+  let Ingprice;
 
-  Product.findById(product_id)
+  if(ingredientId == undefined){
+    Product.findById(product_id)
     .then(product => {
       if (!product) {
         return res.status(404).json({ message: "Could not find post" });
       }
       Id = product._id;
-      productDetails = product.price;
+      productDetails = product.offerPrice;
+      return All.findOne({email})
+    })    
+    .then(all=>{
+      if(!all){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email })
     })
-  Cart.findOne({ email }).populate({
-            path: "items",
-            populate:{
-              path:"product_id"
-            }
-          })
-    .exec()
     .then(cart => {
       if (!cart && qty <= 0) {
         throw new Error('Invalid request');
@@ -261,21 +265,31 @@ exports.add = function (req, res, next) {
         } else if (indexFound !== -1) {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
-          cart.items[indexFound].price = productDetails;
+          cart.items[indexFound].productPrice = productDetails;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
           cart.items.push({
             product_id: product_id,
             qty: qty,
             priority:priority,
-            price: productDetails,
+            productPrice: productDetails,
             total: parseInt(productDetails * qty)
           });
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else {
           throw new Error('Invalid request');
         }
-        return cart.save();
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: " items.product_id"
+      }).exec((err,cart)=> {
+        return res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        })
       } else {
         const cartData = {
           email: email,
@@ -284,24 +298,141 @@ exports.add = function (req, res, next) {
               product_id: product_id,
               qty: qty,
               priority: priority,
-              price: productDetails,
+              productPrice: productDetails,
               total: productDetails * qty,
             }
           ],
           subTotal: parseInt(productDetails * qty)
         };
         cart = new Cart(cartData);
-        return cart.save();
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: " items.product_id"
+      }).exec((err,cart)=> {
+        return res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        })
       }
     })
-    .then(savedCart => res.json(savedCart))
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;
       }
       next(err);
     });
+}
+else {
+  Product.findById(product_id)
+  .then(product => {
+    if (!product) {
+      return res.status(404).json({ message: "Could not find post" });
+    }
+    Id = product._id;
+    productDetails = product.offerPrice;
+    return Ingredient.findById(ingredientId)
+  }) 
+  .then(ingredient => {
+    if (!ingredient) {
+      return res.status(404).json({ message: "Could not find ingredient" });
+    }
+    Ingprice = ingredient.price;
+    return All.findOne({email})
+  })
+  .then(all=>{
+    if(!all){
+      return res.status(403).json({message:'Register yourself first,will ya?!'})
+    }
+    return Cart.findOne({ email })
+  })
+  .then(cart => {
+    if (!cart && qty <= 0) {
+      throw new Error('Invalid request');
+    } else if (cart) {
+      const indexFound = cart.items.findIndex(item => {
+        return item.product_id === product_id;
+      });
+      if (indexFound !== -1 && qty <= 0) {
+        cart.items.splice(indexFound, 1)
+        if (cart.items.length == 0) {
+          cart.subTotal = 0;
+        } else {
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        }
+      } else if (indexFound !== -1) {
+        cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+        cart.items[indexFound].productPrice = productDetails;
+        cart.items[indexFound].ingredientPrice = Ingprice;
+        cart.items[indexFound].total = ((cart.items[indexFound].qty * productDetails) + (cart.items[indexFound].qty * Ingprice));
+        cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+      } else if (qty > 0) {
+        cart.items.push({
+          product_id: product_id,
+          ingredientId : ingredientId,
+          ingredientPrice:Ingprice,
+          qty: qty,
+          priority:priority,
+          productPrice: productDetails,
+          total: parseInt((productDetails * qty)+ (Ingprice * qty))
+          
+        });
+        
+        cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+      } else {
+        throw new Error('Invalid request');
+      }
+      return cart.save((err,cart)=>{
+        Cart.findOne(cart).populate({
+      path: " items.product_id"
+    }).exec((err,cart)=> {
+      return res.json({
+                  status: 'success',
+                  message: "product added in cart successfully",
+                  cart:cart
+              });
+    })
+      })
+    } else {
+      const cartData = {
+        email: email,
+        items: [
+          {
+            product_id: product_id,
+            ingredientId : ingredientId,
+            ingredientPrice:Ingprice,
+            qty: qty,
+            priority: priority,
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty) + (Ingprice * qty))           
+            }],
+            subTotal : parseInt((productDetails * qty) + (Ingprice * qty))
+        };
+      cart = new Cart(cartData);
+      return cart.save((err,cart)=>{
+        Cart.findOne(cart).populate({
+      path: " items.product_id"
+    }).exec((err,cart)=> {
+      return res.json({
+                  status: 'success',
+                  message: "product added in cart successfully",
+                  cart:cart
+              });
+    })
+      })
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+} 
 };
+  
 
 exports.subtract = function (req, res, next) {
   let token = req.headers['authorization'];
@@ -309,16 +440,18 @@ exports.subtract = function (req, res, next) {
   const product_id = req.params.product_id;
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
+  let loadedPrice;
   console.log('qty: ', qty);
   Product.findById(req.params.productId)
     .then(product => {
       if (!product) {
         res.status(404).json({ message: "Could not find product" });
       }
-      else{productDetails = product.price;}
+      else{productDetails = product.offerPrice;
+            console.log(productDetails);
+            return Cart.findOne({ email: email })
+      }
     })
-  Cart.findOne({ email: email })
-    .exec()
     .then(cart => {
       if (!cart || qty <= 0) {
         throw new Error('Invalid request');
@@ -326,9 +459,10 @@ exports.subtract = function (req, res, next) {
         const indexFound = cart.items.findIndex(item => {
           return item.product_id === product_id;
         });
-        if (indexFound !== -1) {
-          console.log('index Found: ', indexFound);
-          console.log('before update items: ', cart.items);
+        if (indexFound !== -1 && cart.items[0].ingredientPrice == undefined ) {
+          // console.log('index Found: ', indexFound);
+          // console.log('before update items: ', cart.items[0].ingredientPrice);
+
           let updatedQty = cart.items[indexFound].qty - qty;
           let updatedTotal = updatedQty * productDetails;
           let updatedPrice = productDetails;
@@ -340,9 +474,28 @@ exports.subtract = function (req, res, next) {
             cart.items[indexFound].price = updatedPrice;
             cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
           }
-          console.log('after update items: ', cart.items);
+          // console.log('after update items: ', cart.items);
           return cart.save();
-        } else {
+        }
+        else if (indexFound !== -1  ) {
+          // console.log('index Found: ', indexFound);
+          // console.log('before update items: ', cart.items[0].ingredientPrice);
+
+          let updatedQty = cart.items[indexFound].qty - qty;
+          let updatedTotal = (updatedQty * productDetails) + (updatedQty * cart.items[0].ingredientPrice);
+          let updatedPrice = productDetails;
+          if (updatedQty <= 0) {
+            cart.items.splice(indexFound, 1);
+          } else {
+            cart.items[indexFound].qty = updatedQty;
+            cart.items[indexFound].total = updatedTotal;
+            cart.items[indexFound].price = updatedPrice;
+            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+          }
+          // console.log('after update items: ', cart.items);
+          return cart.save();
+        }
+         else {
           throw new Error('Invalid request');
         }
       }
@@ -364,7 +517,7 @@ exports.get = (req, res, next) => {
     return res.status(200).json({message:'Enter a valid email first'})
   }
   Cart.findOne({email:email}).populate({
-    path: "items.productId"
+    path: "items.product_id"
   }).populate({
     path: "items.ingredientId"
   })

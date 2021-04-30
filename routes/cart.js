@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/addtocart/:productId/:ingredientId?',auth.auth,cartController.addToCart);
 
-router.post('/addincart/:product_id',auth.auth,cartController.add);
+router.post('/addincart/:product_id/:ingredientId?',auth.auth,cartController.add);
 
 router.get('/getcart',auth.auth,cartController.get);
 
