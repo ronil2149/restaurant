@@ -21,6 +21,7 @@ const feedbackRoutes = require('./routes/feedback');
 const RestaurantRoutes = require('./routes/restaurant');
 const ComplaintRoutes = require('./routes/complaint');
 const RevenueRoutes = require('./routes/revenue');
+const TableRoutes = require('./routes/table');
 const app = express();
 
 const upload = multer({
@@ -80,6 +81,7 @@ app.use('/feedback',feedbackRoutes);
 app.use('/restaurant',RestaurantRoutes);
 app.use('/complaint',ComplaintRoutes);
 app.use('/revenue',RevenueRoutes);
+app.use('/table',TableRoutes);
 
 mongoose.connect('mongodb+srv://mauvais:Mauvais7212@cluster0.gbicb.mongodb.net/myProject?retryWrites=true&w=majority',{ useNewUrlParser: true,useUnifiedTopology: true },)
 .then(result =>{
