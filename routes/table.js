@@ -6,9 +6,9 @@ const TableController = require('../controllers/table');
 
 router.post('/reservation',auth.auth,TableController.MakeResevation);
 
-router.post('/table',TableController.Table);
+router.post('/maketable',TableController.CreateTable);
 
-router.post('/tables',TableController.GetTables);
+router.get('/tables',TableController.GetTables);
 
 router.delete('/delete/:tableId',TableController.DeleteTable);
 

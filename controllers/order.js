@@ -65,7 +65,7 @@ exports.GetMyOrders = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
   All.findOne({email}).populate({path:"orders",populate:{
-    path: "items.productId"
+    path: "items.product_id"
   }
 })
   .then(all=>{
@@ -82,6 +82,30 @@ exports.GetMyOrders = (req,res,next) =>{
     }
     next(err);
   });
+}
+
+exports.GetMyCurrentOrders = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
+
+  Order.find({email})
+  .then(order =>{
+    order.forEach(order=>{
+      if(order.OrderIs == "Pending" || order.OrderIs == "In Progress" || order.OrderIs == "Done" ){
+        return res.status(200).json({message:"Here's your order",order:order})
+      }
+      else{
+        return res.status(404).json({message:"Order must have been served to you by now"})
+      }
+    })
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+  
 }
 
 
@@ -202,9 +226,14 @@ exports.DeleteOrder =  (req, res, next) => {
   Order.findOne({ email })
   .then(order=>{
     if(!order){
-        return res.status(404).json('Order does not exist');
+        return res.status(404).json({message:'Order does not exist'});
     }
+    else if(order.OrderIs == "Pending"){
     order.remove()
+    }
+    else{
+      return res.status(500).json({message:'You can not delete this order now!!'});
+    }
   })
   // Order.findById(orderId)
     
@@ -332,4 +361,49 @@ exports.setDiscount = (req,res,next) =>{
     }
     next(err);
   });
+}
+
+
+exports.FindByCateId = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  const categoryId = req.body.categoryId;
+  var items = [];
+  // Order.findById(orderId)
+  // .then(order=>{
+  //     order.items.forEach((Product)=>{
+  //       items.push(Product.find({categoryId:categoryId}))          
+  //         })     
+  //     })
+  //     .then(product=>{
+  //       return res.status(200).json({message:"Here you go..", product:product})
+  // })
+  // .then(product=>{
+  //   console.log(product)
+  // })
+  // .catch(err => {
+  //   if (!err.statusCode) {
+  //     err.statusCode = 500;
+  //   }
+  //   next(err);
+  // })
+
+  Order.aggregate([
+    {
+        "$lookup": {
+            "from": "Product", /* underlying collection for jobSchema */
+            "localField": "categoryId",
+            "foreignField": "categoryId",
+            "as": "items"
+        }
+    }
+]).exec(function(err, docs){
+    if (err) throw err;
+    res.send(
+        JSON.stringify({
+            status: "success",
+            message: "successfully done",
+            data: docs
+        })
+    );
+})
 }

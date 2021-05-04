@@ -6,9 +6,17 @@ var ItemSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
   },
+  product_id: {
+    type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+  },
   ingredientId:{
     type:Schema.Types.ObjectId,
     ref:'Ingredient'
+  },
+  categoryId:{
+    type:Schema.Types.ObjectId,
+    ref:'Category'
   },
   qty: {
     type: Number,

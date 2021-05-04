@@ -6,7 +6,7 @@ var fs = require('fs')
 var qrCode = require('qrcode-reader');
 
 
-exports.MakeResevation = (req,res,next) => {
+exports.MakeResevation = function(req,res){
     // const restaurantId = req.params.restaurantId;
     let token = req.headers['authorization'];
     token = token.split(' ')[1];
@@ -22,13 +22,13 @@ exports.MakeResevation = (req,res,next) => {
                 name:name,
                 table:null,
                 Status:'Finished',
-                restaurantId:restaurantId
             });
             reservation.save()
             .then(result => { 
                 res.status(201).json({
                     message:"created successfully",
-                    createdTable:reservation                   
+                    createdTable:reservation,
+                   
                 });
                 newcustomer = reservation
                 sendMessage(reservation,req,res);
@@ -43,7 +43,7 @@ exports.MakeResevation = (req,res,next) => {
     })
 };
 
-exports.Table = function(req,res){
+exports.CreateTable = function(req,res){
     // const restaurantId = req.params.restaurantId;
     Table.find({table:req.body.table}).then(result => {
         // if(result.length > 0){
@@ -56,7 +56,6 @@ exports.Table = function(req,res){
                 Status:'Available',
                 availableTime:null,
                 waiting:0,
-                restaurantId:restaurantId
 
             });
             tabledetails.save()
@@ -78,7 +77,7 @@ exports.Table = function(req,res){
                 tabledetails.save();
                 res.render("qr");
             }).catch(err => {
-                res.status(500).json({error:err});
+                res.status(500).json(err);
             })
         // }
     })
@@ -100,8 +99,9 @@ exports.GetTables = (req, res, next) => {
            err.statusCode = 500;
          }
          next(err);
-       });   
-}
+       });
+   
+   }
 
 
 exports.DeleteTable = (req, res, next) => {
@@ -143,7 +143,7 @@ exports.DeleteTable = (req, res, next) => {
     })
 }
 
-exports.DeleteReservation = (req, res, next) => {
+exports.DeleteReservation =  (req, res, next) => {
     // const restaurantId = req.params.restaurantId;
 
     const reservationId = req.params.reservationId;
@@ -168,6 +168,39 @@ exports.DeleteReservation = (req, res, next) => {
       });
   }
 
+  exports.UpdateTable = (req, res, next) => {
+    const tableId = req.params.tableId;
+    const table = req.body.table;
+    const size = req.body.size;
+    
+    if (!table) {
+        const error = new Error('No table found.');
+        error.statusCode = 422;
+        throw error;
+    }
+    Table.findById(tableId)
+        .then(tables => {
+        if (!table) {
+            const error = new Error('Could not find table.');
+            error.statusCode = 404;
+            throw error;
+        }
+        tables.table = table;
+        tables.size = size;
+        return tables.save();
+        })
+        .then(result => {
+        return res.status(200).json({ message: 'table updated!', table: result});
+        })
+        .catch(err => {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+        });
+    }
+  
+  
   exports.CheckIn = function(req,res){
     let token = req.headers['authorization'];
     token = token.split(' ')[1];
@@ -255,14 +288,9 @@ else {
     res.status(500).json({
         error:"Reservation not found"});
 }
-}).catch(err => {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  });
+}).catch(err =>{
+})
 }
-
 
 exports.Scan = (req,res)=>{
     var buffer = fs.readFileSync('./images' + '/2.png');
@@ -289,7 +317,7 @@ exports.CheckOut = function(req,res){
     // Reservation.find({table:table,Status:'Checked In'}).sort({requestedtime:1}).then(result=>{
     //     fphone = result[0].phone;
     // })
-    const restaurantId = req.params.restaurantId;
+    // const restaurantId = req.params.restaurantId;
 
     Reservation.find({phone:phone,Status:'Checked In'}).then(result => {
         console.log(result)

@@ -14,6 +14,10 @@ var ItemSchema = new Schema({
     type:String,
     ref:'Ingredient'
   },
+  categoryId:{
+    type:String,
+    ref:'Category'
+  },
   priority:{
     type:Number,
     required:true

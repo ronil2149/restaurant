@@ -231,6 +231,7 @@ exports.add =  (req, res, next) => {
   const priority = req.body.priority;
   let productDetails;
   let Ingprice;
+  let CatId;
 
   if(ingredientId == undefined){
     Product.findById(product_id)
@@ -239,6 +240,7 @@ exports.add =  (req, res, next) => {
         return res.status(404).json({ message: "Could not find post" });
       }
       Id = product._id;
+      CatId = product.categoryId;
       productDetails = product.offerPrice;
       return All.findOne({email})
     })    
@@ -265,6 +267,7 @@ exports.add =  (req, res, next) => {
         } else if (indexFound !== -1) {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
+          cart.items[indexFound].categoryId = CatId;
           cart.items[indexFound].productPrice = productDetails;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
@@ -272,6 +275,7 @@ exports.add =  (req, res, next) => {
             product_id: product_id,
             qty: qty,
             priority:priority,
+            categoryId:CatId,
             productPrice: productDetails,
             total: parseInt(productDetails * qty)
           });
@@ -298,6 +302,7 @@ exports.add =  (req, res, next) => {
               product_id: product_id,
               qty: qty,
               priority: priority,
+              categoryId:CatId,
               productPrice: productDetails,
               total: productDetails * qty,
             }
@@ -332,6 +337,7 @@ else {
       return res.status(404).json({ message: "Could not find post" });
     }
     Id = product._id;
+    CatId = product.categoryId;
     productDetails = product.offerPrice;
     return Ingredient.findById(ingredientId)
   }) 
@@ -366,6 +372,7 @@ else {
         cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
         cart.items[indexFound].productPrice = productDetails;
         cart.items[indexFound].ingredientPrice = Ingprice;
+        cart.items[indexFound].categoryId = CatId;
         cart.items[indexFound].total = ((cart.items[indexFound].qty * productDetails) + (cart.items[indexFound].qty * Ingprice));
         cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
       } else if (qty > 0) {
@@ -373,6 +380,7 @@ else {
           product_id: product_id,
           ingredientId : ingredientId,
           ingredientPrice:Ingprice,
+          categoryId:CatId,
           qty: qty,
           priority:priority,
           productPrice: productDetails,
@@ -404,6 +412,7 @@ else {
             ingredientId : ingredientId,
             ingredientPrice:Ingprice,
             qty: qty,
+            categoryId:CatId,
             priority: priority,
             productPrice: productDetails,
             total: parseInt((productDetails * qty) + (Ingprice * qty))           
