@@ -12,7 +12,7 @@ router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
 
-router.get('/bycatid/:orderId/:categoryId',orderController.FindByCateId);
+router.get('/bycatid/:orderId/:categoryId?',orderController.FindByCateId);
 
 router.get('/myorders',auth.auth,orderController.GetMyOrders);
 

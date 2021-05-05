@@ -112,7 +112,7 @@ exports.GetMyCurrentOrders = (req,res,next) =>{
 exports.getOrder = (req,res,next) =>{
     const orderId = req.params.orderId;
     Order.findById(orderId).populate({path:"items",populate:{
-      path: "productId"
+      path: "product_id"
     }
   })
     .then(order=>{
@@ -136,14 +136,14 @@ exports.getOrders = (req, res, next) => {
     const perPage = 20;
     let totalItems;
     Order.find().populate({path:"items",populate:{
-      path: "productId"
+      path: "product_id"
     }
   })
       .countDocuments()
       .then(count => {
         totalItems = count;
         return Order.find().populate({path:"items",populate:{
-          path: "productId"
+          path: "product_id"
         }
       })
           .skip((CurrentPage - 1) * perPage)
@@ -249,7 +249,10 @@ exports.DeleteOrder =  (req, res, next) => {
 
 exports.PreparedOrderList = (req,res,next) =>{
   const OrderIs = req.body.OrderIs;
-  Order.find({OrderIs})
+  Order.find({OrderIs}).populate({path:"items",populate:{
+    path: "product_id"
+  }
+})
   .then(orders=>{
     return res.status(200).json({message:'Here is the list you asked for', list:orders})
   })
@@ -366,44 +369,20 @@ exports.setDiscount = (req,res,next) =>{
 
 exports.FindByCateId = (req,res,next) =>{
   const orderId = req.params.orderId;
-  const categoryId = req.body.categoryId;
-  var items = [];
-  // Order.findById(orderId)
-  // .then(order=>{
-  //     order.items.forEach((Product)=>{
-  //       items.push(Product.find({categoryId:categoryId}))          
-  //         })     
-  //     })
-  //     .then(product=>{
-  //       return res.status(200).json({message:"Here you go..", product:product})
-  // })
-  // .then(product=>{
-  //   console.log(product)
-  // })
-  // .catch(err => {
-  //   if (!err.statusCode) {
-  //     err.statusCode = 500;
-  //   }
-  //   next(err);
-  // })
-
-  Order.aggregate([
-    {
-        "$lookup": {
-            "from": "Product", /* underlying collection for jobSchema */
-            "localField": "categoryId",
-            "foreignField": "categoryId",
-            "as": "items"
-        }
-    }
-]).exec(function(err, docs){
-    if (err) throw err;
-    res.send(
-        JSON.stringify({
-            status: "success",
-            message: "successfully done",
-            data: docs
-        })
-    );
+  const categoryId = req.params.categoryId;
+  var products =[]; 
+  Order.findById(orderId)
+  .populate({path:"items",populate:{
+    path: "product_id"
+  }
 })
+  .then(Order=>{
+    if(!Order){
+      return res.status(404).json({message:"there are no such orders"})
+    }
+    
+    products = Order.items;
+    const results = products.filter(item => item.categoryId === `${categoryId}`);
+    return res.status(200).json({message:"the item you need to make is :" , item: results})
+  }) 
 }

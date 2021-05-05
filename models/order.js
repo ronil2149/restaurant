@@ -15,7 +15,7 @@ var ItemSchema = new Schema({
     ref:'Ingredient'
   },
   categoryId:{
-    type:Schema.Types.ObjectId,
+    type:String,
     ref:'Category'
   },
   qty: {
