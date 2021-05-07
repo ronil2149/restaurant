@@ -18,6 +18,12 @@ var ItemSchema = new Schema({
     type:String,
     ref:'Category'
   },
+  progress:{
+    type:String,
+    default:"Pending"
+  },
+  itemAcceptedAt:{type:Date},
+  itemDoneAt:Date,
   qty: {
     type: Number,
     required: true,

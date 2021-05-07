@@ -12,7 +12,13 @@ router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
 
-router.get('/bycatid/:orderId/:categoryId?',orderController.FindByCateId);
+router.get('/bycatid/:categoryId/:orderId',orderController.FindByCateId);
+
+router.put('/acceptbycatid/:categoryId/:orderId',orderController.AcceptByCateId);
+
+router.put('/donebycatid/:categoryId/:orderId',orderController.DoneByCateId);
+
+router.put('/cancelbycatid/:categoryId/:orderId',orderController.CancelByCateId);
 
 router.get('/myorders',auth.auth,orderController.GetMyOrders);
 

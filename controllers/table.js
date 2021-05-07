@@ -46,10 +46,10 @@ exports.MakeResevation = function(req,res){
 exports.CreateTable = function(req,res){
     // const restaurantId = req.params.restaurantId;
     Table.find({table:req.body.table}).then(result => {
-        // if(result.length > 0){
-        //     res.status(500).json({message:'Table Exists with same id !!! Please use a different id'});
-        // }
-        // else {
+        if(result.length > 0){
+            res.status(500).json({message:'Table Exists with same id !!! Please use a different id'});
+        }
+        else {
             const  tabledetails  =  new  Table ( {
                 table:req.body.table,
                 size:req.body.size,
@@ -66,20 +66,18 @@ exports.CreateTable = function(req,res){
                 const table = req.body.table;
                 qrpng.pipe(require('fs').createWriteStream('./images/'+`${table}`+ '.png'));
                 
-                const png_string = QRCode.imageSync(tablec, { type: 'png' });
-                
+                const png_string = QRCode.imageSync(tablec, { type: 'png' });               
+                tabledetails.QRCode = `http://localhost:8080/images/`+`${table}`+`.png`
+                tabledetails.save();
                 res.status(201).json({
                     message:"created successfully",
                     createdTable:tabledetails,
-                    QRCode:'http://192.168.0.61:8020/images/'+`${table}`+ '.png'
-                }); 
-                tabledetails.QRCode = `http://192.168.0.61:8020/images/`+`${table}`+`.png`
-                tabledetails.save();
-                res.render("qr");
+                    QRCode:'http://localhost:8080/images/'+`${table}`+ '.png'});
+                // res.render("qr");                
             }).catch(err => {
-                res.status(500).json(err);
+                res.status(500).json({error:err});
             })
-        // }
+        }
     })
 }
 
@@ -280,8 +278,10 @@ exports.DeleteReservation =  (req, res, next) => {
                         }
                     }
                 }).catch(err =>{
+                    res.status(500).json({error:err});
                 })
             }).catch(err =>{
+                res.status(500).json({error:err});
             })
         }
 else {
@@ -289,6 +289,7 @@ else {
         error:"Reservation not found"});
 }
 }).catch(err =>{
+    res.status(500).json({error:err});
 })
 }
 

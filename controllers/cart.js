@@ -285,8 +285,12 @@ exports.add =  (req, res, next) => {
         }
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: " items.product_id"
-      }).exec((err,cart)=> {
+            path: "items.product_id"
+          }).populate({
+            path: "items.ingredientId"
+          }).populate({
+            path: "items.categoryId"
+          }).exec((err,cart)=> {
         return res.json({
                     status: 'success',
                     message: "product added in cart successfully",
@@ -312,8 +316,12 @@ exports.add =  (req, res, next) => {
         cart = new Cart(cartData);
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: " items.product_id"
-      }).exec((err,cart)=> {
+            path: "items.product_id"
+          }).populate({
+            path: "items.ingredientId"
+          }).populate({
+            path: "items.categoryId"
+          }).exec((err,cart)=> {
         return res.json({
                     status: 'success',
                     message: "product added in cart successfully",
@@ -394,8 +402,12 @@ else {
       }
       return cart.save((err,cart)=>{
         Cart.findOne(cart).populate({
-      path: " items.product_id"
-    }).exec((err,cart)=> {
+          path: "items.product_id"
+        }).populate({
+          path: "items.ingredientId"
+        }).populate({
+          path: "items.categoryId"
+        }).exec((err,cart)=> {
       return res.json({
                   status: 'success',
                   message: "product added in cart successfully",
@@ -422,8 +434,12 @@ else {
       cart = new Cart(cartData);
       return cart.save((err,cart)=>{
         Cart.findOne(cart).populate({
-      path: " items.product_id"
-    }).exec((err,cart)=> {
+          path: "items.product_id"
+        }).populate({
+          path: "items.ingredientId"
+        }).populate({
+          path: "items.categoryId"
+        }).exec((err,cart)=> {
       return res.json({
                   status: 'success',
                   message: "product added in cart successfully",
@@ -529,6 +545,8 @@ exports.get = (req, res, next) => {
     path: "items.product_id"
   }).populate({
     path: "items.ingredientId"
+  }).populate({
+    path: "items.categoryId"
   })
     .then(cart=>{
       if(!cart){
