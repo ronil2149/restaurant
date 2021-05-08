@@ -8,6 +8,10 @@ const router = express.Router();
 
 router.put('/makeorder',auth.auth,orderController.add);
 
+router.put('/waiter/makeorder',orderController.WaiterOrder);
+
+router.post('/waiter/addtocart/:productId/:ingredientId?',orderController.WaiterCart);
+
 router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
