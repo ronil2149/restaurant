@@ -39,7 +39,7 @@ exports.createCategory =  (req, res, next) => {
     let creator;
     const category = new Category({
       categoryName: categoryName,
-      imageUrl: `http://192.168.0.2:8080/${imageUrl}`,
+      imageUrl: `http://192.168.0.3:8080/${imageUrl}`,
       creator: {name:'Manager'}
     });
     category

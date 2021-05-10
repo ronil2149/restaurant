@@ -24,6 +24,8 @@ router.put('/donebycatid/:categoryId/:orderId',orderController.DoneByCateId);
 
 router.put('/cancelbycatid/:categoryId/:orderId',orderController.CancelByCateId);
 
+router.put('/tokitchen/:orderId/:itemId',orderController.SentToKitchen);
+
 router.get('/myorders',auth.auth,orderController.GetMyOrders);
 
 router.post('/current',auth.auth,orderController.GetMyCurrentOrders);

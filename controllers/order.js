@@ -439,10 +439,45 @@ exports.FindByCateId = (req,res,next) =>{
   .then(Order=>{
     if(!Order){
       return res.status(404).json({message:"there are no such orders"})
+    }        
+    products = Order.items;
+    products.forEach(products =>{
+      if(products.InKitchen == false){
+        const error = new Error('Waiter has not sent the item in kitchen yet..')
+        error.statusCode = 404;
+        return res.status(404).json({message:"Waiter has not sent the item in kitchen yet.."})        
+      }
+      else{
+        const results = products.filter(item => item.categoryId === `${categoryId}`);
+        return res.status(200).json({message:"the item you need to make is :" , item: results})
+        }
+    })    
+  }) 
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
+
+exports.SentToKitchen= (req,res,next) =>{
+  const orderId = req.params.orderId;
+  const itemId = req.params.itemId;
+  var products =[]; 
+  Order.findById(orderId)
+  .populate({
+    path: "items.product_id"
+  }).populate({
+    path: "items.ingredientId"
+  })
+  .then(Order=>{
+    if(!Order){
+      return res.status(404).json({message:"there are no such orders"})
     }    
     products = Order.items;
     // console.log(products)
-    const results = products.filter(item => item.categoryId === `${categoryId}`);
+    const results = products.filter(item => item._id === `${itemId}`);
     return res.status(200).json({message:"the item you need to make is :" , item: results})
   }) 
   .catch(err => {
@@ -452,6 +487,7 @@ exports.FindByCateId = (req,res,next) =>{
     next(err);
   });
 }
+
 
 exports.AcceptByCateId = (req,res,next) =>{
   const orderId = req.params.orderId;

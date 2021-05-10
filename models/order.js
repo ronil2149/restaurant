@@ -22,6 +22,10 @@ var ItemSchema = new Schema({
     type:String,
     default:"Pending"
   },
+  InKitchen:{
+    type:Boolean,
+    default:false
+  },
   itemAcceptedAt:{type:Date},
   itemDoneAt:Date,
   qty: {
