@@ -35,10 +35,6 @@ const allSchema = new Schema({
         ref : 'OTP'
         
     }],
-    posts:[{
-        type: Schema.Types.ObjectId,
-        ref:'Post'
-        }],
         resetToken:String,
         resetTokenExpiration:Date,
     feedbacks:[{
@@ -58,10 +54,6 @@ const allSchema = new Schema({
         type:[String],
         default:['user']
     },
-    restaurantId:[{
-        type:Schema.Types.ObjectId,
-        ref:'Restaurant'
-    }],
     complaints:[{
         type:Schema.Types.ObjectId,
         ref:'Complaint'

@@ -8,7 +8,7 @@ router.put('/register',allController.signup);
 
 router.post('/login',allController.login);
 
-router.post('/forgot',auth.auth,allController.forgot);
+router.post('/forgot',allController.forgot);
 
 router.post('/get',allController.getSomeone);
 

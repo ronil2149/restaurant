@@ -6,7 +6,7 @@ const auth = require('../middleware/is-auth');
 const router = express.Router();
 
 // GET /feed/posts
-router.get('/getposts', feedController.getProducts);
+router.get('/getposts',auth.auth, feedController.getProducts);
 
 // POST /feed/post
 router.post('/create/:categoryId', feedController.createProduct);

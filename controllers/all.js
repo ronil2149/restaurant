@@ -208,7 +208,7 @@ exports.forgot = (req, res, next) => {
             .then(all => {
                 creator = all;
                 all.otps.push(ot);
-                res.status(200).json({ message: 'your otp:', otp: otp, creator: { _id: creator._id } });
+                res.status(200).json({ message: `mail has been sent to ${email}`, creator: { _id: creator._id } });
                 return all.save();
             })
             .catch(err => {
@@ -398,7 +398,7 @@ exports.DeleteSomeone = (req,res,next) =>{
             }
             else{
                 all.remove();
-                return res.status(200).json({message:"Deleted successfully :) "});
+                return res.status(200).json({message:"Deleted successfully :) ",  RemovedPerson:all});
             }
         })
         .catch(err => {

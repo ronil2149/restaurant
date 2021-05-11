@@ -466,8 +466,8 @@ exports.subtract = function (req, res, next) {
   const qty = Number.parseInt(req.body.qty);
   let productDetails;
   let loadedPrice;
-  console.log('qty: ', qty);
-  Product.findById(req.params.productId)
+  
+  Product.findById(req.params.product_id)
     .then(product => {
       if (!product) {
         res.status(404).json({ message: "Could not find product" });
