@@ -441,17 +441,8 @@ exports.FindByCateId = (req,res,next) =>{
       return res.status(404).json({message:"there are no such orders"})
     }        
     products = Order.items;
-    products.forEach(products =>{
-      if(products.InKitchen == false){
-        const error = new Error('Waiter has not sent the item in kitchen yet..')
-        error.statusCode = 404;
-        return res.status(404).json({message:"Waiter has not sent the item in kitchen yet.."})        
-      }
-      else{
         const results = products.filter(item => item.categoryId === `${categoryId}`);
         return res.status(200).json({message:"the item you need to make is :" , item: results})
-        }
-    })    
   }) 
   .catch(err => {
     if (!err.statusCode) {
@@ -465,6 +456,7 @@ exports.SentToKitchen= (req,res,next) =>{
   const orderId = req.params.orderId;
   const itemId = req.params.itemId;
   var products =[]; 
+  let loaded
   Order.findById(orderId)
   .populate({
     path: "items.product_id"
@@ -477,7 +469,12 @@ exports.SentToKitchen= (req,res,next) =>{
     }    
     products = Order.items;
     // console.log(products)
-    const results = products.filter(item => item._id === `${itemId}`);
+    const results = products.filter(item => {
+      console.log(item._id);
+      item.categoryId == `${req.params.itemId}`
+      console.log(item);
+    });
+    console.log(results)
     return res.status(200).json({message:"the item you need to make is :" , item: results})
   }) 
   .catch(err => {
@@ -601,28 +598,25 @@ exports.CancelByCateId = (req,res,next) =>{
 
 exports.WaiterCart = (req, res, next) => {
   const email = req.body.email;
-  var productId = req.params.productId;
-  var ingredientId = req.params.ingredientId;
-  const priority = req.body.priority;
+  const product_id = req.params.product_id;
+  const ingredientId = req.params.ingredientId;
   const qty = Number.parseInt(req.body.qty);
+  const priority = req.body.priority;
   let productDetails;
   let Ingprice;
-  console.log(req.params)
+  let CatId;
 
-  if (ingredientId == undefined){
-    Product.findById(productId)
+  if(ingredientId == undefined){
+    Product.findById(product_id)
     .then(product => {
       if (!product) {
         return res.status(404).json({ message: "Could not find post" });
       }
       Id = product._id;
+      CatId = product.categoryId;
       productDetails = product.offerPrice;
-    })
-
-All.findOne({email}).populate({
-  path: "items.productId",
-  select: "name price description imageUrl "
-})
+      return All.findOne({email})
+    })    
     .then(all=>{
       if(!all){
         return res.status(403).json({message:'Register yourself first,will ya?!'})
@@ -634,10 +628,10 @@ All.findOne({email}).populate({
         throw new Error('Invalid request');
       } else if (cart) {
         const indexFound = cart.items.findIndex(item => {
-          return item.product_id === productId;
+          return item.product_id === product_id;
         });
         if (indexFound !== -1 && qty <= 0) {
-          cart.items.splice(indexFound, 1);
+          cart.items.splice(indexFound, 1)
           if (cart.items.length == 0) {
             cart.subTotal = 0;
           } else {
@@ -646,25 +640,30 @@ All.findOne({email}).populate({
         } else if (indexFound !== -1) {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
+          cart.items[indexFound].categoryId = CatId;
           cart.items[indexFound].productPrice = productDetails;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
           cart.items.push({
-            productId :productId,
+            product_id: product_id,
             qty: qty,
             priority:priority,
+            categoryId:CatId,
             productPrice: productDetails,
-            total: parseInt((productDetails * qty))
-          })
+            total: parseInt(productDetails * qty)
+          });
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else {
           throw new Error('Invalid request');
         }
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      }).exec((err,cart)=> {
+            path: "items.product_id"
+          }).populate({
+            path: "items.ingredientId"
+          }).populate({
+            path: "items.categoryId"
+          }).exec((err,cart)=> {
         return res.json({
                     status: 'success',
                     message: "product added in cart successfully",
@@ -674,30 +673,35 @@ All.findOne({email}).populate({
         })
       } else {
         const cartData = {
-          email: email,          
+          email: email,
           items: [
             {
-              productId : productId,
+              product_id: product_id,
               qty: qty,
               priority: priority,
+              categoryId:CatId,
               productPrice: productDetails,
-              total: parseInt((productDetails * qty))
-            }],
-            subTotal : parseInt((productDetails * qty))
+              total: productDetails * qty,
+            }
+          ],
+          subTotal: parseInt(productDetails * qty)
         };
         cart = new Cart(cartData);
         return cart.save((err,cart)=>{
           Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      }).exec((err,cart)=> {
-        res.json({
+            path: "items.product_id"
+          }).populate({
+            path: "items.ingredientId"
+          }).populate({
+            path: "items.categoryId"
+          }).exec((err,cart)=> {
+        return res.json({
                     status: 'success',
                     message: "product added in cart successfully",
                     cart:cart
                 });
       })
-        });
+        })
       }
     })
     .catch(err => {
@@ -705,123 +709,130 @@ All.findOne({email}).populate({
         err.statusCode = 500;
       }
       next(err);
-    })
+    });
 }
 else {
-  Product.findById(productId)
-    .then(product => {
-      if (!product) {
-        return res.status(404).json({ message: "Could not find post" });
-      }
-      Id = product._id;
-      productDetails = product.offerPrice;
-    })
-
-    Ingredient.findById(ingredientId)
-    .then(ingredient => {
-      if (!ingredient) {
-        return res.status(404).json({ message: "Could not find ingredient" });
-      }
-      Ingprice = ingredient.price;
-    })
-
-
-All.findOne({email}).populate({
-  path: "items.productId",
-  select: "name price description imageUrl "
-})
-    .then(all=>{
-      if(!all){
-        return res.status(403).json({message:'Register yourself first,will ya?!'})
-      }
-      return Cart.findOne({ email }).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      })    
-    })
-    .then(cart => {
-      if (!cart && qty <= 0) {
-        throw new Error('Invalid request');
-      } else if (cart) {
-        const indexFound = cart.items.findIndex(item => {
-          return item.product_id === productId;
-        });
-        if (indexFound !== -1 && qty <= 0) {
-          cart.items.splice(indexFound, 1);
-          if (cart.items.length == 0) {
-            cart.subTotal = 0;
-          } else {
-            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-          }
-        } else if (indexFound !== -1) {
-          cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
-          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
-          cart.items[indexFound].productPrice = productDetails;
-          cart.items[indexFound].ingredientPrice = Ingprice;
-          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
-        } else if (qty > 0) {
-          cart.items.push({
-            productId :productId,
-            ingredientId : ingredientId,
-            qty: qty,
-            priority:priority,
-            ingredientPrice:Ingprice,
-            productPrice: productDetails,
-            total: parseInt((productDetails * qty) + Ingprice)
-          })
-          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+  Product.findById(product_id)
+  .then(product => {
+    if (!product) {
+      return res.status(404).json({ message: "Could not find post" });
+    }
+    Id = product._id;
+    CatId = product.categoryId;
+    productDetails = product.offerPrice;
+    return Ingredient.findById(ingredientId)
+  }) 
+  .then(ingredient => {
+    if (!ingredient) {
+      return res.status(404).json({ message: "Could not find ingredient" });
+    }
+    Ingprice = ingredient.price;
+    return All.findOne({email})
+  })
+  .then(all=>{
+    if(!all){
+      return res.status(403).json({message:'Register yourself first,will ya?!'})
+    }
+    return Cart.findOne({ email })
+  })
+  .then(cart => {
+    if (!cart && qty <= 0) {
+      throw new Error('Invalid request');
+    } else if (cart) {
+      const indexFound = cart.items.findIndex(item => {
+        return item.product_id === product_id;
+      });
+      if (indexFound !== -1 && qty <= 0) {
+        cart.items.splice(indexFound, 1)
+        if (cart.items.length == 0) {
+          cart.subTotal = 0;
         } else {
-          throw new Error('Invalid request');
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         }
-        return cart.save((err,cart)=>{
-          Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      }).exec((err,cart)=> {
-        return res.json({
-                    status: 'success',
-                    message: "product added in cart successfully",
-                    cart:cart
-                });
-      })
-        })
-      } else {
-        const cartData = {
-          email: email,          
-          items: [
-            {
-              productId : productId,
-              ingredientId : ingredientId,
-              qty: qty,
-              priority: priority,
-              productPrice: productDetails,
-              ingredientPrice:Ingprice,
-              total: parseInt((productDetails * qty) + Ingprice)
-            }],
-            subTotal : parseInt((productDetails * qty) + Ingprice)
-        };
-        cart = new Cart(cartData);
-        return cart.save((err,cart)=>{
-          Cart.findOne(cart).populate({
-        path: "items.productId",
-        select: "name price description imageUrl "
-      }).exec((err,cart)=> {
-        res.json({
-                    status: 'success',
-                    message: "product added in cart successfully",
-                    cart:cart
-                });
-      })
+      } else if (indexFound !== -1) {
+        cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+        cart.items[indexFound].productPrice = productDetails;
+        cart.items[indexFound].ingredientPrice = Ingprice;
+        cart.items[indexFound].categoryId = CatId;
+        cart.items[indexFound].total = ((cart.items[indexFound].qty * productDetails) + (cart.items[indexFound].qty * Ingprice));
+        cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+      } else if (qty > 0) {
+        cart.items.push({
+          product_id: product_id,
+          ingredientId : ingredientId,
+          ingredientPrice:Ingprice,
+          categoryId:CatId,
+          qty: qty,
+          priority:priority,
+          productPrice: productDetails,
+          total: parseInt((productDetails * qty)+ (Ingprice * qty))
+          
         });
+        
+        cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+      } else {
+        throw new Error('Invalid request');
       }
+      return cart.save((err,cart)=>{
+        Cart.findOne(cart).populate({
+          path: "items.product_id"
+        }).populate({
+          path: "items.ingredientId"
+        }).populate({
+          path: "items.categoryId"
+        }).exec((err,cart)=> {
+      return res.json({
+                  status: 'success',
+                  message: "product added in cart successfully",
+                  cart:cart
+              });
     })
-    .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
-      next(err);
+      })
+    } else {
+      const cartData = {
+        email: email,
+        items: [
+          {
+            product_id: product_id,
+            ingredientId : ingredientId,
+            ingredientPrice:Ingprice,
+            qty: qty,
+            categoryId:CatId,
+            priority: priority,
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty) + (Ingprice * qty))           
+            }],
+            subTotal : parseInt((productDetails * qty) + (Ingprice * qty))
+        };
+      cart = new Cart(cartData);
+      return cart.save((err,cart)=>{
+        Cart.findOne(cart).populate({
+          path: "items.product_id"
+        }).populate({
+          path: "items.ingredientId"
+        }).populate({
+          path: "items.categoryId"
+        }).exec((err,cart)=> {
+      return res.json({
+                  status: 'success',
+                  message: "product added in cart successfully",
+                  cart:cart
+              });
     })
-}}
+      })
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+} 
+};
+  
+
+  
 
 
 
@@ -877,3 +888,217 @@ exports.WaiterOrder = (req,res,next) =>{
     next(err);
   });
 }
+
+
+exports.WaiterAddingItemIntocart = (req, res, next) => {
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
+  const productId = req.params.productId;
+  const ingredientId = req.params.ingredientId;
+  const priority = req.body.priority;
+  const qty = Number.parseInt(req.body.qty);
+  let productDetails;
+  let Ingprice;
+  
+
+  if (ingredientId == undefined){
+    Product.findById(productId)
+    .then(product => {
+      if (!product) {
+        return res.status(404).json({ message: "Could not find post" });
+      }
+      Id = product._id;
+      productDetails = product.offerPrice;
+    })
+
+All.findOne({email})
+    .then(all=>{
+      if(!all){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email })
+    })
+    .then(cart => {
+      if (!cart && qty <= 0) {
+        throw new Error('Invalid request');
+      } else if (cart) {
+        const indexFound = cart.items.findIndex(item => {
+          return item.product_id === productId;
+        });
+        if (indexFound !== -1 && qty <= 0) {
+          cart.items.splice(indexFound, 1);
+          if (cart.items.length == 0) {
+            cart.subTotal = 0;
+          } else {
+            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+          }
+        } else if (indexFound !== -1) {
+          cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails ;
+          cart.items[indexFound].productPrice = productDetails;
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else if (qty > 0) {
+          cart.items.push({
+            productId :productId,
+            qty: qty,
+            priority:priority,
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty))
+          })
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else {
+          throw new Error('Invalid request');
+        }
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: " items.productId"
+      }).exec((err,cart)=> {
+        return res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        })
+      } else {
+        const cartData = {
+          email: email,          
+          items: [
+            {
+              productId : productId,
+              qty: qty,
+              priority: priority,
+              productPrice: productDetails,
+              total: parseInt((productDetails * qty))
+            }],
+            subTotal : parseInt((productDetails * qty))
+        };
+        cart = new Cart(cartData);
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: "items.productId"
+      }).exec((err,cart)=> {
+        res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        });
+      }
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    })
+}
+else {
+  Product.findById(productId)
+    .then(product => {
+      if (!product) {
+        return res.status(404).json({ message: "Could not find post" });
+      }
+      Id = product._id;
+      productDetails = product.offerPrice;
+    })
+
+    Ingredient.findById(ingredientId)
+    .then(ingredient => {
+      if (!ingredient) {
+        return res.status(404).json({ message: "Could not find ingredient" });
+      }
+      Ingprice = ingredient.price;
+    })
+
+
+All.findOne({email})
+    .then(all=>{
+      if(!all){
+        return res.status(403).json({message:'Register yourself first,will ya?!'})
+      }
+      return Cart.findOne({ email })
+    })
+    .then(cart => {
+      if (!cart && qty <= 0) {
+        throw new Error('Invalid request');
+      } else if (cart) {
+        const indexFound = cart.items.findIndex(item => {
+          return item.product_id === productId;
+        });
+        if (indexFound !== -1 && qty <= 0) {
+          cart.items.splice(indexFound, 1);
+          if (cart.items.length == 0) {
+            cart.subTotal = 0;
+          } else {
+            cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+          }
+        } else if (indexFound !== -1) {
+          cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
+          cart.items[indexFound].total = cart.items[indexFound].qty * productDetails ;
+          cart.items[indexFound].productPrice = productDetails;
+          cart.items[indexFound].ingredientPrice = Ingprice;
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else if (qty > 0) {
+          cart.items.push({
+            productId :productId,
+            ingredientId : ingredientId,
+            qty: qty,
+            priority:priority,
+            ingredientPrice:Ingprice,
+            productPrice: productDetails,
+            total: parseInt((productDetails * qty)+ (Ingprice * qty))
+          })
+          cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
+        } else {
+          throw new Error('Invalid request');
+        }
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+        path: "items.productId"
+      }).exec((err,cart)=> {
+        return res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        })
+      } else {
+        const cartData = {
+          email: email,          
+          items: [
+            {
+              productId : productId,
+              ingredientId : ingredientId,
+              qty: qty,
+              priority: priority,
+              productPrice: productDetails,
+              ingredientPrice:Ingprice,
+              total: parseInt((productDetails * qty) + (Ingprice * qty))
+            }],
+            subTotal : parseInt((productDetails * qty) + (Ingprice * qty))
+        };
+        cart = new Cart(cartData);
+        return cart.save((err,cart)=>{
+          Cart.findOne(cart).populate({
+            path: "items.productId"
+          }).exec((err,cart)=> {
+        res.json({
+                    status: 'success',
+                    message: "product added in cart successfully",
+                    cart:cart
+                });
+      })
+        });
+      }
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    })
+}
+};
