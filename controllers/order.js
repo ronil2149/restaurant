@@ -1,9 +1,12 @@
 const Order = require('../models/order');
+const Item = require('../models/order');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
 const All = require('../models/all');
 const order = require('../models/order');
 let loadedUser;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 var CronJob = require('cron').CronJob;
 
 
@@ -427,21 +430,37 @@ exports.setDiscount = (req,res,next) =>{
 
 
 exports.FindByCateId = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const orderId = req.params.orderId;
-  const categoryId = req.params.categoryId;
-  var products =[]; 
-  Order.findById(orderId)
-  .populate({
-    path: "items.product_id"
-  }).populate({
-    path: "items.ingredientId"
-  })
+  var products =[];
+  var loadedCategory;
+  All.findOne({email})
+  .then(all=>{
+    if(!all){
+      const error = new Error("There are no such persons!!");
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+        loadedCategory = all.categoryId;
+        return Order.findById(orderId)
+        .populate({
+          path: "items.product_id"
+        })
+        .populate({
+          path: "items.ingredientId"
+        })
+    }
+  })  
   .then(Order=>{
     if(!Order){
       return res.status(404).json({message:"there are no such orders"})
-    }        
+    } 
     products = Order.items;
-        const results = products.filter(item => item.categoryId === `${categoryId}`);
+    const results = products.filter(item => 
+    item.categoryId === `${loadedCategory}`      
+        );
         return res.status(200).json({message:"the item you need to make is :" , item: results})
   }) 
   .catch(err => {
@@ -452,31 +471,45 @@ exports.FindByCateId = (req,res,next) =>{
   });
 }
 
-exports.SentToKitchen= (req,res,next) =>{
+exports.SentTOKitchen= (req,res,next) =>{
   const orderId = req.params.orderId;
   const itemId = req.params.itemId;
-  var products =[]; 
-  let loaded
+  var Item =[];
   Order.findById(orderId)
+  // .select({'items': {$elemMatch: {'_id':itemId}}})
+  // Order.aggregate([{$match:{"_id":`${orderId}`}},{$unwind: "$item"}, {$match:{"item._id" : `${itemId}`}}] )
   .populate({
     path: "items.product_id"
-  }).populate({
+  })
+  .populate({
     path: "items.ingredientId"
   })
-  .then(Order=>{
-    if(!Order){
+  .then(order=>{
+    if(!order){
       return res.status(404).json({message:"there are no such orders"})
-    }    
-    products = Order.items;
-    // console.log(products)
-    const results = products.filter(item => {
-      console.log(item._id);
-      item.categoryId == `${req.params.itemId}`
-      console.log(item);
-    });
-    console.log(results)
-    return res.status(200).json({message:"the item you need to make is :" , item: results})
-  }) 
+    }
+    Item = order.items;
+    const item = Item.find().select({'items': {$elemMatch: {'_id':itemId}}})
+    console.log(item)
+    // return Order.find(
+    //   {"items": {$elemMatch: {'_id': itemId }}}
+    // )
+    // Item = order.items[0];
+    // Item.ToKitchen == true;    
+    
+    // order.items[0].ToKitchen == true;
+    // // order.save();   
+    // return Order.findById(orderId)
+    
+  })
+  // .then(Order=>{
+  //   // Item.ToKitchen === true;
+  //   // Order.save();
+  //   // prder[0].items[0].ToKitchen == true;
+  //   // console.log(prder)
+  //   Order.save();
+  //   return res.status(200).json({message:"This item has been sent to kitchen  " ,item:Order})  
+  // })
   .catch(err => {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -486,22 +519,54 @@ exports.SentToKitchen= (req,res,next) =>{
 }
 
 
+exports.SentToKitchen = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  const itemId = req.params.itemId;
+
+ Order.updateOne(
+    {
+      _id: orderId,
+      items: {$elemMatch: {'_id':itemId}}
+    },
+    { $set: { "items.$.ToKitchen" : true } }
+ )
+ .then(order=>{
+  return res.status(200).json({message:"This item has been sent to kitchen "})  
+ })
+}
+
+
+
 exports.AcceptByCateId = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const orderId = req.params.orderId;
   const categoryId = req.params.categoryId;
   var products =[]; 
-  Order.findById(orderId)
-  .populate({
-    path: "items.product_id"
-  }).populate({
-    path: "items.ingredientId"
-  })
+  var loadedCategory;
+  All.findOne({email})
+  .then(all=>{
+    if(!all){
+      const error = new Error("There are no such persons!!");
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      loadedCategory = all.categoryId;
+      return Order.findById(orderId)
+      .populate({
+        path: "items.product_id"
+      }).populate({
+        path: "items.ingredientId"
+      })
+    }
+  })  
   .then(Order=>{
     if(!Order){
       return res.status(404).json({message:"there are no such orders"})
     }    
     products = Order.items;
-    const results = products.filter(item => item.categoryId === `${categoryId}`);
+    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
     results[0].progress ="In Progress";
     results[0].itemAcceptedAt = Date.now();
     Order.save();
@@ -518,21 +583,35 @@ exports.AcceptByCateId = (req,res,next) =>{
 
 
 exports.DoneByCateId = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const orderId = req.params.orderId;
   const categoryId = req.params.categoryId;
+  var loadedCategory;
   var products =[]; 
-  Order.findById(orderId)
-  .populate({
-    path: "items.product_id"
-  }).populate({
-    path: "items.ingredientId"
-  })
+  All.findOne({email})
+  .then(all=>{
+    if(!all){
+      const error = new Error("There are no such persons!!");
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      loadedCategory = all.categoryId;
+      return Order.findById(orderId)
+      .populate({
+        path: "items.product_id"
+      }).populate({
+        path: "items.ingredientId"
+      })
+    }
+  })  
   .then(Order=>{
     if(!Order){
       return res.status(404).json({message:"there are no such orders"})
     }    
     products = Order.items;
-    const results = products.filter(item => item.categoryId === `${categoryId}`);
+    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
     results[0].progress ="Done";
     results[0].itemDoneAt = Date.now()
     Order.save();
@@ -548,23 +627,37 @@ exports.DoneByCateId = (req,res,next) =>{
 
 
 exports.CancelByCateId = (req,res,next) =>{
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
   const orderId = req.params.orderId;
   const categoryId = req.params.categoryId;
   var products =[]; 
   let loadedProduct1;
   let loadedProduct;
-  Order.findById(orderId)
-  .populate({
-    path: "items.product_id"
-  }).populate({
-    path: "items.ingredientId"
-  })
+  var loadedCategory;
+  All.findOne({email})
+  .then(all=>{
+    if(!all){
+      const error = new Error("There are no such persons!!");
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      loadedCategory = all.categoryId;
+      return Order.findById(orderId)
+      .populate({
+        path: "items.product_id"
+      }).populate({
+        path: "items.ingredientId"
+      })
+    }
+  }) 
   .then(Order=>{
     if(!Order){
       return res.status(404).json({message:"there are no such orders"})
     }    
     products = Order.items;
-    const results = products.filter(item => item.categoryId === `${categoryId}`);
+    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
     results[0].progress ="Unavailable";
     loadedProduct1 = results[0].product_id;
     Order.save();

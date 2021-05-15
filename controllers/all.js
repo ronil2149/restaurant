@@ -37,6 +37,7 @@ exports.signup = (req, res, next) => {
     const name = req.body.name;
     const password = req.body.password;
     const activerole = req.body.activerole;
+    const categoryId = req.body.categoryId;
     const roles = req.body.roles;
     const sha1 = crypto.createHash('sha1').update(password).digest('hex');
     const all = new All({
@@ -44,6 +45,7 @@ exports.signup = (req, res, next) => {
         email: email,
         phone: phone,
         activerole: activerole,
+        categoryId:categoryId,
         restaurantId:restaurantId,
         password: sha1        
     })
@@ -110,8 +112,8 @@ exports.login = (req, res, next) => {
                 loadedAll = all;
                 loadedActiverole = all.activerole;
                 var sha1 = crypto.createHash('sha1').update(password).digest('hex');
-                let accessToken = jwt.sign({ email: loadedAll.email,name:loadedAll.name, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
-                let refreshToken = jwt.sign({ email: loadedAll.email,name:loadedAll.name, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
+                let accessToken = jwt.sign({ email: loadedAll.email,name:loadedAll.name, categoryId : loadedAll.categoryId, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretaccesstoken', { expiresIn: "86400s" });
+                let refreshToken = jwt.sign({ email: loadedAll.email,name:loadedAll.name,categoryId : loadedAll.categoryId, phone: loadedAll.phone, Id: loadedAll._id.toString() }, 'somesupersecretrefreshtoken', { expiresIn: "7d" })            
                 
                 if (sha1 == all.password) {
                     accessTokens.push(accessToken);

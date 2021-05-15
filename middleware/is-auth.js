@@ -16,7 +16,8 @@ exports.auth = (req,res,next)=>{
             email = user.email;
             id = user.Id;
             phone = user.phone;
-            name  = user.name
+            name  = user.name;
+            categoryId = user.categoryId;
             next();
         }
         else{

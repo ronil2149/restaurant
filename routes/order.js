@@ -16,13 +16,13 @@ router.get('/getorder/:orderId',orderController.getOrder);
 
 router.get('/getorders',orderController.getOrders);
 
-router.get('/bycatid/:categoryId/:orderId',orderController.FindByCateId);
+router.get('/bycatid/:orderId',auth.auth,orderController.FindByCateId);
 
-router.put('/acceptbycatid/:categoryId/:orderId',orderController.AcceptByCateId);
+router.put('/acceptbycatid/:orderId',auth.auth,orderController.AcceptByCateId);
 
-router.put('/donebycatid/:categoryId/:orderId',orderController.DoneByCateId);
+router.put('/donebycatid/:orderId',auth.auth,orderController.DoneByCateId);
 
-router.put('/cancelbycatid/:categoryId/:orderId',orderController.CancelByCateId);
+router.put('/cancelbycatid/:orderId',auth.auth,orderController.CancelByCateId);
 
 router.put('/tokitchen/:orderId/:itemId',orderController.SentToKitchen);
 

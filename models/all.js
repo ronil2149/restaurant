@@ -54,6 +54,10 @@ const allSchema = new Schema({
         type:[String],
         default:['user']
     },
+    categoryId:{
+        type:Schema.Types.ObjectId,
+        default:null
+    },
     complaints:[{
         type:Schema.Types.ObjectId,
         ref:'Complaint'
