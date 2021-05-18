@@ -26,6 +26,8 @@ router.put('/cancelbycatid/:orderId',auth.auth,orderController.CancelByCateId);
 
 router.put('/tokitchen/:orderId/:itemId',orderController.SentToKitchen);
 
+router.post('/coupon',orderController.CouponGenerate);
+
 router.get('/myorders',auth.auth,orderController.GetMyOrders);
 
 router.post('/current',auth.auth,orderController.GetMyCurrentOrders);

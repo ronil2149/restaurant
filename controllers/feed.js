@@ -37,7 +37,6 @@ exports.getProducts = (req, res, next) => {
       }
       next(err);
     });
-
 };
 
 exports.createProduct = (req, res, next) => {
@@ -268,7 +267,7 @@ exports.deleteProduct = (req, res, next) => {
     }) 
     .then(result => {
       console.log(result);
-      res.status(200).json({ message: 'Product deleted!!' })
+      res.status(200).json({ message: 'Product deleted!!' ,result: result})
     })
     .catch(err => {
       if (!err.statusCode) {

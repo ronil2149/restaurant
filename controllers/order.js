@@ -3,7 +3,7 @@ const Item = require('../models/order');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
 const All = require('../models/all');
-const DiscountCodes = require('../models/discount');
+const DiscountCodes = require('../models/coupon');
 const cc = require('coupon-code')
 const code = cc.generate();
 const order = require('../models/order');
@@ -416,7 +416,9 @@ exports.setDiscount = (req,res,next) =>{
   Order.findById(orderId)
   .then(order=>{
     if(!order){
-      return res.status(404).json({message:"There are no such order!!"});
+      const error = new Error('There are no such orders!!');
+            error.statusCode = 404;
+            throw error;
     }
     const offer = (order.grandTotal)/100 * discount;
     order.grandTotal = order.grandTotal - offer ;
@@ -709,7 +711,7 @@ exports.CouponGenerate = (req,res,next) =>{
   newDiscountCode.save()
   .then(result => {
       res.status(201).json({        
-        message: 'category created successfully!',
+        message: 'coupon created successfully!',
         offer: newDiscountCode,
       });
   })
