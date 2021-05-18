@@ -18,6 +18,12 @@ router.put('/updaterole',auth.auth,allController.UpdateRole);
 
 router.delete('/delete/:allId',allController.DeleteSomeone);
 
+router.put('/deactivate/:allId',allController.DeactivateSomeone);
+
+router.put('/activate/:allId',allController.ActivateSomeone);
+
+router.put('/update/:allId',allController.UpdateSomeone);
+
 router.put('/switchrole',auth.auth,allController.SwitchRole);
 
 router.get('/geteveryone',allController.GetEveryone);

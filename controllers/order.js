@@ -3,6 +3,9 @@ const Item = require('../models/order');
 const Cart = require('../models/Cart2');
 const Product = require('../models/product');
 const All = require('../models/all');
+const DiscountCodes = require('../models/discount');
+const cc = require('coupon-code')
+const code = cc.generate();
 const order = require('../models/order');
 let loadedUser;
 const mongoose = require('mongoose');
@@ -687,6 +690,37 @@ exports.CancelByCateId = (req,res,next) =>{
     }
     next(err);
   });
+}
+
+
+exports.CouponGenerate = (req,res,next) =>{
+  const ccode = code;
+  const isPercent = req.body.isPercent;
+  const amount = req.body.amount;
+  const expireDate = req.body.expireDate;
+  const isActive = req.body.isActive;
+  const newDiscountCode = new DiscountCodes({
+      ccode: ccode,
+      isPercent: isPercent,
+      amount: amount,
+      expireDate: expireDate,
+      isActive: isActive
+  })
+  newDiscountCode.save()
+  .then(result => {
+      res.status(201).json({        
+        message: 'category created successfully!',
+        offer: newDiscountCode,
+      });
+  })
+  .catch(err => {
+      if (!err.statusCode) {
+      
+      err.statusCode = 500;
+      }
+      next(err);
+  });
+
 }
 
 exports.WaiterCart = (req, res, next) => {

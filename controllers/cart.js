@@ -228,6 +228,7 @@ exports.add =  (req, res, next) => {
   const product_id = req.params.product_id;
   const ingredientId = req.params.ingredientId;
   const qty = Number.parseInt(req.body.qty);
+  const notes = req.body.notes;
   const priority = req.body.priority;
   let productDetails;
   let Ingprice;
@@ -268,6 +269,7 @@ exports.add =  (req, res, next) => {
           cart.items[indexFound].qty = cart.items[indexFound].qty + qty;
           cart.items[indexFound].total = cart.items[indexFound].qty * productDetails;
           cart.items[indexFound].categoryId = CatId;
+          cart.items[indexFound].notes = notes;
           cart.items[indexFound].productPrice = productDetails;
           cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
         } else if (qty > 0) {
@@ -275,6 +277,7 @@ exports.add =  (req, res, next) => {
             product_id: product_id,
             qty: qty,
             priority:priority,
+            notes:notes,
             categoryId:CatId,
             productPrice: productDetails,
             total: parseInt(productDetails * qty)
@@ -306,6 +309,7 @@ exports.add =  (req, res, next) => {
               product_id: product_id,
               qty: qty,
               priority: priority,
+              notes:notes,
               categoryId:CatId,
               productPrice: productDetails,
               total: productDetails * qty,
@@ -381,6 +385,7 @@ else {
         cart.items[indexFound].productPrice = productDetails;
         cart.items[indexFound].ingredientPrice = Ingprice;
         cart.items[indexFound].categoryId = CatId;
+        cart.items[indexFound].notes = notes;
         cart.items[indexFound].total = ((cart.items[indexFound].qty * productDetails) + (cart.items[indexFound].qty * Ingprice));
         cart.subTotal = cart.items.map(item => item.total).reduce((acc, next) => acc + next);
       } else if (qty > 0) {
@@ -388,6 +393,7 @@ else {
           product_id: product_id,
           ingredientId : ingredientId,
           ingredientPrice:Ingprice,
+          notes:notes,
           categoryId:CatId,
           qty: qty,
           priority:priority,
@@ -425,6 +431,7 @@ else {
             ingredientPrice:Ingprice,
             qty: qty,
             categoryId:CatId,
+            notes:notes,
             priority: priority,
             productPrice: productDetails,
             total: parseInt((productDetails * qty) + (Ingprice * qty))           

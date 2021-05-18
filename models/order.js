@@ -22,6 +22,7 @@ var ItemSchema = new Schema({
     type:String,
     default:"Pending"
   },
+  notes:String,
   ToKitchen:{
     type:Boolean,
     default:false

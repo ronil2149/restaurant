@@ -34,6 +34,10 @@ var ItemSchema = new Schema({
   ingredientPrice:{
     type:Number
   },
+  notes:{
+    type:String,
+    default: null
+  },
   total: {
       type: Number,
       required: true,

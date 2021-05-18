@@ -411,3 +411,88 @@ exports.DeleteSomeone = (req,res,next) =>{
           });
 
 }
+
+exports.DeactivateSomeone = (req,res,next) =>{
+
+    const allId = req.params.allId;
+
+    All.findById(allId)
+    .then(all=>{
+        if(!all)
+        {
+            const error = new Error('There are no such persons!!');
+            error.statusCode = 404;
+            throw error;
+        }
+        else{
+            all.active = false;
+            all.deactivatedAt = Date.now();
+            all.save();
+            return res.json({message:"This person has been deactivated !", person:all})
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+          err.statusCode = 500;
+        }
+        next(err);
+      });
+}
+
+exports.ActivateSomeone = (req,res,next) =>{
+    const allId = req.params.allId;
+    All.findById(allId)
+    .then(all=>{
+        if(!all)
+        {
+            const error = new Error('There are no such persons!!');
+            error.statusCode = 404;
+            throw error;
+        }
+        else{
+            all.active = true;
+            all.activatedAt = Date.now();
+            all.save();
+            return res.json({message:"This person has been activated !", person:all})
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+          err.statusCode = 500;
+        }
+        next(err);
+      });
+}
+
+
+exports.UpdateSomeone = (req,res,next) =>{
+    const allId = req.params.allId;
+    const phone = req.body.phone;
+    const name = req.body.name;
+    const categoryId = req.body.categoryId;
+
+    All.findById(allId)
+    .then(all=>{
+        if(!all)
+        {
+            const error = new Error('There are no such persons!!');
+            error.statusCode = 404;
+            throw error;
+        }
+        else{
+            all.phone = phone;
+            all.categoryid = categoryId;
+            // all.name = name;
+            all.save();
+            return res.json({message:"Data of this person has been updated !", person:all})
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+          err.statusCode = 500;
+          return err;
+        }
+        next(err);
+      });
+    
+}

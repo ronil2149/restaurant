@@ -17,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.5",
+    "coupon-code": "^0.4.5",
     "cron": "^1.8.2",
     "crypto": "^1.0.1",
     "express": "^4.16.3",
@@ -33,6 +34,7 @@
     "otp-without-db": "^1.0.4",
     "qr-image": "^3.2.0",
     "qrcode-reader": "^1.0.4",
+    "start": "^5.1.0",
     "validator": "^13.5.2",
     "yup-phone": "^1.2.19"
   },
