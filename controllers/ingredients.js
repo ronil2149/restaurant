@@ -1,4 +1,5 @@
 const Ingredient = require('../models/ingredients');
+const Product = require('../models/product')
 const path = require('path');
 const fs = require('fs');
 
@@ -21,16 +22,6 @@ exports.createIngredient = (req,res,next) =>{
       creator: {name:'Manager'}
     });
     ingredient.save()
-    // Ingredient.findOne({IngredientName:IngredientName})
-    // .then(ingredient=>{
-    //     if(ingredient){
-    //         return res.json({message:'Ingredient is already available'});
-    //     }
-    //     else {
-    //         ingredient.save()
-    //         return res.status(201).json({message: 'Ingredient added  successfully!', product: ingredient });
-    //     }
-    // })
     .then(result =>{
       return res.status(201).json({message:'Ingredient added successfully !', ingredient: result})
     })
@@ -39,39 +30,111 @@ exports.createIngredient = (req,res,next) =>{
           err.statusCode = 500;
         }
         next(err);
-      });
-  
+      });  
 };
 
+exports.AddingIngredientIntoProduct = (req,res,next) =>{
+  const productId = req.params.productId;
+  const ingredientId = req.params.ingredientId;
+  let loadedIngredient;
+
+  Ingredient.findById(ingredientId)
+  .then(ingredient =>{
+    if(!ingredient){
+      const error = new Error('There are no such products!!');
+        error.statusCode = 404;
+        throw error;
+    }
+    else{
+      loadedIngredient = ingredient;
+      return Product.findById(productId);
+    }
+  })
+  .then(product =>{
+    if(!product){
+      const error = new Error('There are no such products!!');
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      product.ingredients.push(loadedIngredient);
+      product.save();
+      return res.json({message:"Ingredient successfully added into the product!", result : product})
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {       
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
+
+exports.RemovingIngredientFromProduct = (req,res,next) =>{
+  const productId = req.params.productId;
+  const ingredientId = req.params.ingredientId;
+  let loadedIngredient;
+
+  Ingredient.findById(ingredientId)
+  .then(ingredient =>{
+    if(!ingredient){
+      const error = new Error('There are no such products!!');
+        error.statusCode = 404;
+        throw error;
+    }
+    else{
+      loadedIngredient = ingredient;
+      return Product.findById(productId);
+    }
+  })
+  .then(product =>{
+    if(!product){
+      const error = new Error('There are no such products!!');
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      product.ingredients.pull(loadedIngredient);
+      product.save();
+      return res.json({message:"Ingredient successfully removed from the product!", result : product})
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {       
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
 
 
-exports.getIngredients = (req, res, next) => {
-    const CurrentPage = req.query.page || 1;
-    const perPage = 20;
-    let totalItems;
-    Ingredient.find()
-      .countDocuments()
-      .then(count => {
-        totalItems = count;
-        return Ingredient.find()
-          .skip((CurrentPage - 1) * perPage)
-          .limit(perPage)
-      })
-      .then(ingredients => {
-        res.status(200)
-          .json({
-            message: 'Fetched ingredients Successfully',
-            ingredients: ingredients,
-            totalItems: totalItems
-          });
-      })
-      .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
-        next(err);
-      });  
-  };
+exports.getIngredients = (req, res, next) => { 
+    const CurrentPage = req.query.page || 1; 
+    const perPage = 20; 
+    let totalItems;  
+    Ingredient.find() 
+      .countDocuments()  
+      .then(count => {  
+        totalItems = count;  
+        return Ingredient.find() 
+          .skip((CurrentPage - 1) * perPage) 
+          .limit(perPage) 
+      }) 
+      .then(ingredients => { 
+        res.status(200) 
+          .json({ 
+            message: 'Fetched ingredients Successfully', 
+            ingredients: ingredients, 
+            totalItems: totalItems 
+          }); 
+      }) 
+      .catch(err => { 
+        if (!err.statusCode) { 
+          err.statusCode = 500; 
+        }  
+        next(err); 
+      });   
+  }; 
 
 
   

@@ -4,7 +4,11 @@ const IngredientController = require('../controllers/ingredients');
 
 const router = express.Router();
 
-router.post('/addingredient', IngredientController.createIngredient);
+router.post('/addingredient/', IngredientController.createIngredient);
+
+router.post('/inginproduct/:productId/:ingredientId',IngredientController.AddingIngredientIntoProduct);
+
+router.post('/ingoutproduct/:productId/:ingredientId',IngredientController.RemovingIngredientFromProduct);
 
 router.get('/getIngredients',IngredientController.getIngredients);
 

@@ -46,6 +46,10 @@ const productSchema = new Schema(
       type: Object,
       // required: String
     },
+    ingredients:[{
+      type:Schema.Types.ObjectId,
+      ref:'Ingredient'
+    }]
   },
   { timestamps: true }
 );

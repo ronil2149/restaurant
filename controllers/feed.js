@@ -15,11 +15,11 @@ exports.getProducts = (req, res, next) => {
   const CurrentPage = req.query.page || 1;
   const perPage = 10;
   let totalItems;
-  Product.find()
+  Product.find().populate('ingredients')
     .countDocuments()
     .then(count => {
       totalItems = count;
-      return Product.find()
+      return Product.find().populate('ingredients')
         .skip((CurrentPage - 1) * perPage)
         .limit(perPage)
     })
@@ -81,7 +81,7 @@ exports.createProduct = (req, res, next) => {
 
 exports.getProduct =(req, res, next) => {
   const productId = req.params.productId;
-  Product.findById(productId)
+  Product.findById(productId).populate('ingredients')
     .then(product => {
       if (!product) {
         const error = new Error('Could not find product.');
@@ -244,7 +244,6 @@ exports.getMenu = (req,res,next)=>{
       next(err);
     });
 }
-
 
 exports.deleteProduct = (req, res, next) => {
   const productId = req.params.productId;
