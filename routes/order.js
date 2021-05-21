@@ -8,9 +8,11 @@ const router = express.Router();
 
 router.put('/makeorder',auth.auth,orderController.add);
 
-router.put('/waiter/makeorder',orderController.WaiterOrder);
+router.post('/waiter/makeorder',orderController.WaiterOrder);
 
-router.post('/waiter/addtocart/:productId/:ingredientId?',orderController.WaiterCart);
+router.post('/waiter/addtocart/:product_id/:ingredientId?',orderController.WaiterCart);
+
+router.get('/tableorder',orderController.OrderListByTable);
 
 router.get('/getorder/:orderId',orderController.getOrder);
 

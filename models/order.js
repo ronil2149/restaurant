@@ -10,6 +10,7 @@ var ItemSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
   },
+  
   ingredientId:{
     type:Schema.Types.ObjectId,
     ref:'Ingredient'
@@ -62,6 +63,7 @@ const OrderSchema = new Schema({
       type: String,
       required: true
     },
+    table:{type: String},
     email: {
       type: String,
     //   required: true,

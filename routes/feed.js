@@ -6,20 +6,20 @@ const auth = require('../middleware/is-auth');
 const router = express.Router();
 
 // GET /feed/posts
-router.get('/getposts',auth.auth, feedController.getProducts);
+router.get('/getposts', feedController.getProducts);
 
 // POST /feed/post
-router.post('/create/:categoryId', feedController.createProduct);
+router.post('/create/:categoryId', feedController.createProduct); 
 
-router.put('/itemunavailable/:productId',feedController.UnavailableItem);
+router.put('/itemunavailable/:productId',feedController.UnavailableItem); 
 
-router.put('/itemavailable/:productId',feedController.ItemAvailable);
+router.put('/itemavailable/:productId',feedController.ItemAvailable); 
 
-router.put('/unavailable/:productId',feedController.ItemUnavailable);
+router.put('/unavailable/:productId',feedController.ItemUnavailable); 
 
-router.post('/getmenu',feedController.getMenu);
+router.post('/getmenu',feedController.getMenu); 
 
-router.get('/product/:productId',feedController.getProduct);
+router.get('/product/:productId',feedController.getProduct); 
 
 router.put('/update/:productId',feedController.updateProduct);
 

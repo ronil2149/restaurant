@@ -239,7 +239,7 @@ exports.DeleteReservation =  (req, res, next) => {
                     }
                     else {
                         if (result[0].waiting >= 0 && (result[0].Status == 'Checkin' || result[0].Status == 'Available')) {
-                            Table.updateOne({table:table},{$set:{waiting:result[0].waiting,Status:'Reserved'}})
+                            Table.updateOne({table:table},{$set:{waiting:result[0].waiting,Status:'Reserved',currentUser : id , userEmail : email}})
                             .then(result =>
                             {
                             }).catch(err =>{ 
@@ -256,7 +256,7 @@ exports.DeleteReservation =  (req, res, next) => {
                             })
                         }   
                         else if (result[0].waiting == 0 && result[0].Status == 'Checkin'){
-                            Table.updateOne({table:table},{$set:{Status:'Reserved'}})
+                            Table.updateOne({table:table},{$set:{Status:'Reserved',currentUser : id , userEmail : email}})
                             .then(result =>
                             {
                             }).catch(err =>{ 

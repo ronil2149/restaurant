@@ -9,7 +9,9 @@ const tableSchema = new Schema({
     availableTime:Date,
     QRCode:{type:String},
     waiting: {type:Number,default:0},
-    restaurantId:{type:Schema.Types.ObjectId}
+    restaurantId:{type:Schema.Types.ObjectId},
+    currentUser:{type:Schema.Types.ObjectId, ref:'All'},
+    userEmail:String
 
 });
 

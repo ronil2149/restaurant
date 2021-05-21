@@ -143,20 +143,20 @@ exports.getIngredient = (req, res, next) => {
     Ingredient.findById(ingredientId)
       .then(ingredient => {
         if (!ingredient) {
-          const error = new Error('Could not find ingredient.');
-          error.statusCode = 404;
-          return res.json({message:'could not find it'})
-        }
+          const error = new Error('Could not find ingredient.'); 
+          error.statusCode = 404; 
+          return res.json({message:'could not find it'}) 
+        } 
         return res.status(200).json({ message: 'ingredient fetched.', ingredient: ingredient });
-      })
-      .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
-        next(err);
-      });
+      }) 
+      .catch(err => { 
+        if (!err.statusCode) { 
+          err.statusCode = 500; 
+        }  
+        next(err); 
+      }); 
   };
-
+ 
 
   
 exports.updateIngredient = (req, res, next) => {
