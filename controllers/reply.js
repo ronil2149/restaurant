@@ -3,7 +3,7 @@ const Reply = require('../models/reply');
 // const auth = require('../middleware/is-auth');
 // const All = require('../models/all')
 
-exports.MakeComplaint = (req,res,next)=>{
+exports.MakeReply = (req,res,next)=>{
     // const title = req.body.title;
     const message = req.body.message;
       const complaintId = req.params.complaintId;
@@ -39,7 +39,7 @@ exports.MakeComplaint = (req,res,next)=>{
   
 
 exports.GetReply = (req, res, next) => {
-    const complaintId = req.params.complaintId;
+    const complaintId = req.params.complaintId; 
     const replyId = req.params.replyId;
 
     Reply.findById(replyId).populate({path:"replies"}).populate({path:"complaintId"})
@@ -80,6 +80,32 @@ exports.GetReply = (req, res, next) => {
       });
   };
 
-
+  exports.Getreplies= (req, res, next) => {
+    const CurrentPage = req.query.page || 1;
+    const perPage = 10;
+    let totalItems;
+    Reply.find().populate('complaintId')
+      .countDocuments()
+      .then(count => {
+        totalItems = count;
+        return Reply.find().populate('complaintId')
+          .skip((CurrentPage - 1) * perPage)
+          .limit(perPage)
+      })
+      .then(replies => {
+        res.status(200)
+          .json({
+            message: 'Fetched replies Successfully',
+            replies: replies,
+            totalItems: totalItems
+          });
+      })
+      .catch(err => {
+        if (!err.statusCode) {
+          err.statusCode = 500;
+        }
+        next(err);
+      });
+  };
 
   

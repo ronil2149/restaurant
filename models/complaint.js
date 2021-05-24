@@ -17,7 +17,11 @@ const complaintSchema = new Schema(
         userId:{
             type:Schema.Types.ObjectId,
             ref:'All'
-        }
+        },
+        replyId:[{
+            type:Schema.Types.ObjectId,
+            ref:'Reply'
+        }]
     }
 )
 

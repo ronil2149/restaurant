@@ -29,5 +29,7 @@ router.delete('/delete/:productId',feedController.deleteProduct);
 
 router.get('/menu/:categoryId',feedController.getMenuByCategoryId);
 
+router.post('/offer',feedController.AllRestaurantOffer);
+
 
 module.exports = router; 

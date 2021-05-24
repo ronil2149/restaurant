@@ -20,6 +20,6 @@ router.post('/checkin',auth.auth,TableController.CheckIn);
 
 router.post('/scan',TableController.Scan);
 
-router.post('/:restaurantId/checkout',TableController.CheckOut);
+router.post('/checkout',TableController.CheckOut);
 
 module.exports = router;
