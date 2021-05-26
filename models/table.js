@@ -11,9 +11,12 @@ const tableSchema = new Schema({
     waiting: {type:Number,default:0},
     restaurantId:{type:Schema.Types.ObjectId},
     currentUser:{type:Schema.Types.ObjectId, ref:'All'},
-    orders:{type:Schema.Types.ObjectId, ref:'Order'},
+    orders:[{
+        type:Schema.Types.ObjectId,
+        ref:'Order'
+    }],
     userEmail:String,
-    phone:Number
+    phone:String
 
 });
 

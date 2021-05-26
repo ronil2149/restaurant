@@ -22,4 +22,6 @@ router.post('/scan',TableController.Scan);
 
 router.post('/checkout',TableController.CheckOut);
 
+router.get('/orderlist/:tableId?',TableController.OrderListOfTable);
+
 module.exports = router;

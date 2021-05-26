@@ -1,6 +1,11 @@
 const Reservation = require('../models/reservation');
+const Order = require('../models/order');
+const order = require('../models/order');
 const Table = require('../models/table');
 const QRCode = require('qr-image');
+const mongoose = require('mongoose');
+const ObjectId = require('mongodb').ObjectID;
+
 var Jimp = require("jimp");
 var fs = require('fs')
 var qrCode = require('qrcode-reader');
@@ -324,17 +329,71 @@ exports.Scan = (req,res)=>{
 
 
 
-exports.CheckOut = function(req,res){
+exports.CheckOut = function(req,res,next){
     const phone = req.body.phone;
     const table = req.body.table;
     var Status;
     var fphone;
+    var loadedOrder =[];
+    var loadedTable;
+    var ORDER =[];
     // Reservation.find({table:table,Status:'Checked In'}).sort({requestedtime:1}).then(result=>{
     //     fphone = result[0].phone;
     // })
     // const restaurantId = req.params.restaurantId;
 
-    Reservation.find({phone:phone,Status:'Checked In'}).then(result => {
+    // Table.findOne({phone}).populate('orders')
+    // .then(table =>{
+    //     if(!table){
+    //         const error = new Error('There are no such table!!');
+    //         error.statusCode = 404;
+    //         throw error;
+    //     }
+    //     else{
+    //         loadedTable = table.orders;
+    //         // console.log(loadedTable)
+    //         loadedTable.forEach(order =>{
+
+    //             // console.log(order)
+    //             ORDER = order._id.toString();
+    //             console.log(ORDER)
+    //             Order.findById(ORDER)
+    //             .then(order1=>{
+    //                 if(!order1){
+    //                     const error = new Error('There are no such order!!');
+    //                     error.statusCode = 404;
+    //                     throw error;
+    //                 }
+                   
+    //                     console.log(order1)
+    //                     loadedOrder = order;
+    //                     // return Table.findOne({phone:phone});
+                   
+    //             })
+    //         })
+    //         // ORDER = loadedTable._id.toString();
+    //         // ORDER.forEach(Order =>{
+    //         //     return Order.findById(ORDER)
+    //         // })
+            
+            
+    //     }
+    // })    
+    
+    // .then(table=>{
+    //     if(!table){
+    //         const error = new Error('There are no such table!!');
+    //         error.statusCode = 404;
+    //         throw error;
+    //     }
+    //     else{
+    //         table.orders.pull(loadedOrder);
+    //         table.save();
+    //         return Reservation.find({phone:phone,Status:'Checked In'})
+    //     }
+    // })
+    Reservation.find({phone:phone,Status:'Checked In'})
+    .then(result => {
         console.log(result)
         if(result.length > 0){
             Status = result[0].Status;
@@ -419,7 +478,7 @@ exports.CheckOut = function(req,res){
                     })
                 }
                 else {
-                    Table.updateOne({phone:phone},{$set:{Status:'Available',availableTime:null, currentUser:null , userEmail:null , phone:null}})
+                    Table.updateOne({phone:phone},{$set:{Status:'Available',availableTime:null, currentUser:null , userEmail:null , phone:null , orders:[]}})
                     .then(result =>{
                         thanksUser(phone);
                         return res.status(200).json({
@@ -429,7 +488,7 @@ exports.CheckOut = function(req,res){
                         if (!err.statusCode) {
                           err.statusCode = 500;
                         }
-                        // next(err);
+                        next(err);
                       })
                 }
                 })
@@ -439,3 +498,62 @@ exports.CheckOut = function(req,res){
         }
     })
 }
+
+
+
+exports.OrderListOfTable = (req,res,next) =>{
+    const table = req.body.table;
+    const tableId = req.params.tableId;
+    if(table == undefined){
+    Table.findById(tableId).populate({path:"orders",populate:{
+        path: "items.product_id"
+      }
+    })
+    .populate({path:"orders",populate:{
+      path: "items.categoryId"
+    }
+    })
+    .populate({path:"orders",populate:{
+      path: "items.ingredientId"
+    }
+    })
+    .populate("currentUser")
+    .then(table=>{
+       
+      return res.status(200).json({message:'Here is the list you asked for', list:table})
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+}
+else{
+    Table.findOne({table}).populate({path:"orders",populate:{
+        path: "items.product_id"
+      }
+    })
+    .populate({path:"orders",populate:{
+      path: "items.categoryId"
+    }
+    })
+    .populate({path:"orders",populate:{
+      path: "items.ingredientId"
+    }
+    })
+    .populate("currentUser")
+    .then(table=>{
+       
+      return res.status(200).json({message:'Here is the list you asked for', list:table})
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+
+}
+  }
+  

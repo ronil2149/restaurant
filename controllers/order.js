@@ -5,7 +5,8 @@ const Product = require('../models/product');
 const All = require('../models/all');
 const DiscountCodes = require('../models/coupon');
 const Ingredient = require('../models/ingredients')
-const cc = require('coupon-code')
+const cc = require('coupon-code');
+const Table = require('../models/table')
 const code = cc.generate();
 const order = require('../models/order');
 let loadedUser;
@@ -21,6 +22,8 @@ exports.add = (req,res,next) =>{
     const paymentMethod = req.body.paymentMethod;  
     let loadedCart;
     var loadedUser;
+    var loadedTable;
+
     All.findOne({email})
     .then(all=>{
       if(!all){
@@ -30,9 +33,19 @@ exports.add = (req,res,next) =>{
       }
       else{
         loadedUser = all;
-        return Cart.findOne({email})
+        return Table.findOne({userEmail:email})        
+      }      
+    })
+    .then(table=>{
+      if(!table){
+        const error = new Error('Could not find a Table to push the order!!');
+          error.statusCode = 404;
+          throw error;
       }
-      
+      else{
+       loadedTable = table;
+       return Cart.findOne({email})
+      }
     })    
     .then(cart=>{
         if(!cart){
@@ -46,6 +59,7 @@ exports.add = (req,res,next) =>{
           name : name,
           paymentMethod: paymentMethod,
           email:email,
+          phone:phone,
           grandTotal: subTotal,
           userId:id,
           items: loadedCart
@@ -53,16 +67,21 @@ exports.add = (req,res,next) =>{
       order.save();      
       loadedUser.orders.push(order);
       loadedUser.save();
+      loadedTable.orders.push(order);
+      loadedTable.save();
+      
       // console.log(loadedUser)
       
       
       res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
       return Cart.findOneAndDelete({email})
+      
     })
     .then(cart=>{
       cart.remove();
-      
+      return 
     })
+    
     .catch(err => {
       if (!err.statusCode) {
         err.statusCode = 500;

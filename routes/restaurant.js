@@ -11,6 +11,8 @@ router.put('/activate/:restaurantId',RestaurantController.Activate);
 
 router.delete('/delete/:restaurantId',RestaurantController.Delete);
 
+router.get('/remainedtime/:restaurantId',RestaurantController.RemainingTime);
+
 router.put('/getrestaurants',RestaurantController.GetRestaurants);
 
 router.get('/totalrestaurants',RestaurantController.TotalRestaurants);

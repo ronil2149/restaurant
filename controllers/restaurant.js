@@ -5,20 +5,46 @@ const Restaurant = require('../models/restaurant');
 
 exports.MakeRestaurant = async (req,res,next) =>{
     const RestaurantName = req.body.RestaurantName;
-    const restaurant =await new Restaurant({
+    let loadedRestaurant;
+    const resto = new Restaurant({
         RestaurantName:RestaurantName
     })
-    restaurant.save()
-    .then(restaurant=>{
-        return res.status(201).json({message:"Restaurant created!" , Restaurant : restaurant})
+        loadedRestaurant = resto;
+
+        console.log('The process of making an restaurant available has been started....')
+        var job = new CronJob('* * * * * 1', function() {
+        loadedRestaurant.activity = false;
+        loadedRestaurant.save();         
+        console.log(loadedRestaurant.activity);
+    }, null, false, 'America/Los_Angeles');
+    job.start();
+    resto.save();
+
+    return res.status(200).json({message:"Restaurant created!" , RestaurantId : resto._id,message:"restaurant is available for the moment can you choose another one", restaurnat:resto})
+}
+
+exports.RemainingTime = (req,res,next) =>{
+    const restaurantId = req.params.restaurantId
+    Restaurant.aggregate([
+        { $project: {
+          difference: {
+            $divide: [
+              {           
+              $subtract: ["$expireAt", "$created_At"] },
+              60 * 60 * 24 * 1000
+            ]
+          }
+        }},
+        { $group: {
+          _id: "$restaurantId",
+          totalDifference: { $sum: "$difference" }
+        }},
+      ])
+      .then(results => {
+        res.send({ daysleft: results[0].totalDifference,});
     })
-    .catch(err => {
-        if (!err.statusCode) {
-            err.statusCode = 500;e
-        }
-        next(err);
-    });
-    
+    .catch(error => console.error(error))
+
 }
 
 
