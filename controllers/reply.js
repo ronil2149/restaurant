@@ -4,7 +4,6 @@ const Reply = require('../models/reply');
 // const All = require('../models/all')
 
 exports.MakeReply = (req,res,next)=>{
-    // const title = req.body.title;
     const message = req.body.message;
       const complaintId = req.params.complaintId;
       let loadedAll;
@@ -16,17 +15,13 @@ exports.MakeReply = (req,res,next)=>{
              throw error;
          } 
          const reply = new Reply({
-            //  title: title,
              message: message,
-             complaintId:complaintId,
-            //  userId:id
+             complaintId:complaintId
          })
          reply.save();
          complaint.replyId.push(reply);
+         complaint.status = "Done";
          complaint.save();
-        //  loadedAll.complaints.push(complaint);
-        //  loadedAll.save();
-        //  console.log(loadedAll)
          return res.status(200).json({message:'Thank you for your reply!..',reply:reply});
      })
      .catch(err => {

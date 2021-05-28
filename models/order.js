@@ -80,6 +80,10 @@ const OrderSchema = new Schema({
           },
           message: props => `${props.value} is not a valid phone number!`
       }},
+      orderType:{
+        type:String,
+        default:'OnTable'
+      },
     userId:{
       type:Schema.Types.ObjectId,
       ref:'User'

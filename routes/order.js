@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.put('/makeorder',auth.auth,orderController.add);
 
+router.put('/parcelorder',auth.auth,orderController.add);
+
 router.post('/waiter/makeorder',orderController.WaiterOrder);
 
 router.post('/waiter/addtocart/:product_id/:ingredientId?',orderController.WaiterCart);
@@ -20,11 +22,11 @@ router.get('/getorders',orderController.getOrders);
 
 router.get('/bycatid/:orderId',auth.auth,orderController.FindByCateId);
 
-router.put('/acceptbycatid/:orderId',auth.auth,orderController.AcceptByCateId);
+router.put('/acceptbycatid/:orderId/:itemId',auth.auth,orderController.AcceptByItemId);
 
-router.put('/donebycatid/:orderId',auth.auth,orderController.DoneByCateId);
+router.put('/donebycatid/:orderId/:itemId',auth.auth,orderController.DoneByItemId);
 
-router.put('/cancelbycatid/:orderId',auth.auth,orderController.CancelByCateId);
+router.put('/cancelbycatid/:orderId/:itemId',auth.auth,orderController.CancelByItemId);
 
 router.put('/tokitchen/:orderId/:itemId',orderController.SentToKitchen);
 
@@ -41,6 +43,8 @@ router.put('/list',orderController.PreparedOrderList);
 router.put('/cancel/:orderId',orderController.cancelOrder);
 
 router.get('/howlong/:orderId',orderController.TimeItTook);
+
+router.get('/timeforitem/:orderId/:itemId',orderController.TimeForItem);
 
 router.put('/done/:orderId',orderController.DoneOrder);
 

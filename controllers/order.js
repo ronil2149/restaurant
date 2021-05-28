@@ -90,6 +90,61 @@ exports.add = (req,res,next) =>{
     });
 }
 
+exports.parcel = (req,res,next) =>{
+  const name = req.body.name;
+  let token = req.headers['authorization'];
+  token = token.split(' ')[1];
+  const paymentMethod = req.body.paymentMethod;  
+  let loadedCart;
+  var loadedUser;
+  All.findOne({email})
+  .then(all=>{
+    if(!all){
+      const error = new Error('There are no such persons!!');
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      loadedUser = all;
+      return Cart.findOne({email})
+    }
+  })    
+  .then(cart=>{
+      if(!cart){
+        const error = new Error('Could not find Cart!!');
+        error.statusCode = 404;
+        throw error;
+      }
+      loadedCart = cart.items;
+      subTotal = cart.subTotal;
+      const order = new Order({
+        name : name,
+        paymentMethod: paymentMethod,
+        email:email,
+        grandTotal: subTotal,
+        userId:id,
+        items: loadedCart,
+        orderType:'Parcel'
+    })
+    order.save();
+    loadedUser.orders.push(order);
+    loadedUser.save();  
+    res.status(200).json({ orderId:order._id, userDetails:order ,Order: loadedCart });
+    return Cart.findOneAndDelete({email})
+  })
+  .then(cart=>{
+    cart.remove();
+    
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
+
+
 exports.GetMyOrders = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
@@ -124,6 +179,7 @@ exports.GetMyOrders = (req,res,next) =>{
 exports.GetMyCurrentOrders = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
+  var loadedOrder =[];
   Order.find({email}).populate({
     path: "items.product_id"
   }).populate({
@@ -135,17 +191,14 @@ exports.GetMyCurrentOrders = (req,res,next) =>{
     // console.log(order)
     order.forEach(order=>{
       // console.log(order)
-      if(order.OrderIs == "Pending"){
-        // console.log(order)
-        return res.status(200).json({message:"Here's your order",order:order})
+      if(order.OrderIs == "Pending" || order.OrderIs == "In Progress" || order.OrderIs == "Done"){
+        loadedOrder.push(order);
       }
-      else if(order.OrderIs == "In Progress"){
-        return res.status(200).json({message:"Here's your order",order:order})
-      }
-      else if(order.OrderIs == "Done"){
-        return res.status(200).json({message:"Here's your order",order:order})
-      }
+      // else{
+      //   return res.json({message:"Your order must have been delivered to you by now!"})
+      // }
     })
+    return res.json({message:"Here you go.." , orders:loadedOrder});
   })
   .catch(err => {
     if (!err.statusCode) {
@@ -430,6 +483,27 @@ exports.TimeItTook = (req,res,next) =>{
   });
 }
 
+exports.TimeForItem = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  const itemId = req.params.itemId;
+  var itemAcceptedAt;
+  var itemDoneAt;
+  Order.findOne({_id:orderId},{items: {$elemMatch: {_id:itemId}}})
+  .then(order =>{
+    if(!order){
+      const error = new Error("There are no such orders!!");
+      error.statusCode = 404;
+      throw error;
+    }
+   itemAcceptedAt = order.items[0].itemAcceptedAt;
+   itemDoneAt = order.items[0].itemDoneAt;
+   result = itemDoneAt - itemAcceptedAt;
+   result1 = (result / 60000);
+   return res.json({message:"The time it took to make this item was...", time:result1})
+  })
+}
+
+
 exports.setDiscount = (req,res,next) =>{
   const orderId = req.params.orderId;
   const discount = req.body.discount;
@@ -480,7 +554,9 @@ exports.FindByCateId = (req,res,next) =>{
   })  
   .then(Order=>{
     if(!Order){
-      return res.status(404).json({message:"there are no such orders"})
+      const error = new Error("There are no such orders!!");
+      error.statusCode = 404;
+      throw error;
     } 
     products = Order.items;
     const results = products.filter(item => 
@@ -558,45 +634,32 @@ exports.SentToKitchen = (req,res,next) =>{
  .then(order=>{
   return res.status(200).json({message:"This item has been sent to kitchen "})  
  })
+ .catch(err => {
+  if (!err.statusCode) {
+    err.statusCode = 500;
+  }
+  next(err);
+});
 }
 
 
 
-exports.AcceptByCateId = (req,res,next) =>{
+
+exports.AcceptByItemId = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
   const orderId = req.params.orderId;
-  const categoryId = req.params.categoryId;
-  var products =[]; 
-  var loadedCategory;
-  All.findOne({email})
-  .then(all=>{
-    if(!all){
-      const error = new Error("There are no such persons!!");
-      error.statusCode = 404;
-      throw error;
-    }
-    else{
-      loadedCategory = all.categoryId;
-      return Order.findById(orderId)
-      .populate({
-        path: "items.product_id"
-      }).populate({
-        path: "items.ingredientId"
-      })
-    }
-  })  
-  .then(Order=>{
-    if(!Order){
-      return res.status(404).json({message:"there are no such orders"})
-    }    
-    products = Order.items;
-    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
-    results[0].progress ="In Progress";
-    results[0].itemAcceptedAt = Date.now();
-    Order.save();
-    return res.status(200).json({message:"the item you accepted to make is :" , item: results})
-  }) 
+  const itemId = req.params.itemId;
+  var date = Date.now();
+  Order.updateOne(
+    {
+      _id: orderId,
+      items: {$elemMatch: {'_id':itemId}}
+    },
+    { $set: { "items.$.progress" : "In Progress" ,"items.$.itemAcceptedAt" : `${date}`} }
+ ).then(order=>{
+  return res.status(200).json({message:"This item has been accepted!! "})  
+ })
   .catch(err => {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -607,41 +670,21 @@ exports.AcceptByCateId = (req,res,next) =>{
 
 
 
-exports.DoneByCateId = (req,res,next) =>{
+exports.DoneByItemId = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
   const orderId = req.params.orderId;
-  const categoryId = req.params.categoryId;
-  var loadedCategory;
-  var products =[]; 
-  All.findOne({email})
-  .then(all=>{
-    if(!all){
-      const error = new Error("There are no such persons!!");
-      error.statusCode = 404;
-      throw error;
-    }
-    else{
-      loadedCategory = all.categoryId;
-      return Order.findById(orderId)
-      .populate({
-        path: "items.product_id"
-      }).populate({
-        path: "items.ingredientId"
-      })
-    }
-  })  
-  .then(Order=>{
-    if(!Order){
-      return res.status(404).json({message:"there are no such orders"})
-    }    
-    products = Order.items;
-    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
-    results[0].progress ="Done";
-    results[0].itemDoneAt = Date.now()
-    Order.save();
-    return res.status(200).json({message:"Done item :" , item: results})
-  }) 
+  const itemId = req.params.itemId;
+  var date = Date.now();
+  Order.updateOne(
+    {
+      _id: orderId,
+      items: {$elemMatch: {'_id':itemId}}
+    },
+    { $set: { "items.$.progress" : "Done" ,"items.$.itemDoneAt" : `${date}`} }
+ ).then(order=>{
+  return res.status(200).json({message:"Done!! "})  
+ })
   .catch(err => {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -651,61 +694,21 @@ exports.DoneByCateId = (req,res,next) =>{
 }
 
 
-exports.CancelByCateId = (req,res,next) =>{
+exports.CancelByItemId = (req,res,next) =>{
   let token = req.headers['authorization'];
   token = token.split(' ')[1];
   const orderId = req.params.orderId;
-  const categoryId = req.params.categoryId;
-  var products =[]; 
-  let loadedProduct1;
-  let loadedProduct;
-  var loadedCategory;
-  All.findOne({email})
-  .then(all=>{
-    if(!all){
-      const error = new Error("There are no such persons!!");
-      error.statusCode = 404;
-      throw error;
-    }
-    else{
-      loadedCategory = all.categoryId;
-      return Order.findById(orderId)
-      .populate({
-        path: "items.product_id"
-      }).populate({
-        path: "items.ingredientId"
-      })
-    }
-  }) 
-  .then(Order=>{
-    if(!Order){
-      return res.status(404).json({message:"there are no such orders"})
-    }    
-    products = Order.items;
-    const results = products.filter(item => item.categoryId === `${loadedCategory}`);
-    results[0].progress ="Unavailable";
-    loadedProduct1 = results[0].product_id;
-    Order.save();
-    // res.status(200).json({message:"the item you accepted to make is :" , item: results})
-    return Product.findById(loadedProduct1);
-  }) 
-  .then(product=>{
-    if(!product){
-      return res.status(404).json({message:'There are no such products'});
-    }
-    else {
-      loadedProduct = product  ;
-      loadedProduct.availability = false;
-      loadedProduct.save();
-      console.log('The process of making an item available has been started....')
-      var job = new CronJob('1 * * * * *', function() {
-        loadedProduct.availability = true;
-        loadedProduct.save();         
-        console.log(loadedProduct.availability);
-    }, null, true, 'America/Los_Angeles');
-    job.start();
-    return res.status(200).json({message:"The product you made unavailable is ",product:product})
-  }})
+  const itemId = req.params.itemId;
+  var date = Date.now();
+  Order.updateOne(
+    {
+      _id: orderId,
+      items: {$elemMatch: {'_id':itemId}}
+    },
+    { $set: { "items.$.progress" : "Cancelled" } }
+ ).then(order=>{
+  return res.status(200).json({message:"Cancelled!! "})  
+ })
   .catch(err => {
     if (!err.statusCode) {
       err.statusCode = 500;

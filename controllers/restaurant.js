@@ -24,27 +24,26 @@ exports.MakeRestaurant = async (req,res,next) =>{
 }
 
 exports.RemainingTime = (req,res,next) =>{
-    const restaurantId = req.params.restaurantId
-    Restaurant.aggregate([
-        { $project: {
-          difference: {
-            $divide: [
-              {           
-              $subtract: ["$expireAt", "$created_At"] },
-              60 * 60 * 24 * 1000
-            ]
-          }
-        }},
-        { $group: {
-          _id: "$restaurantId",
-          totalDifference: { $sum: "$difference" }
-        }},
-      ])
-      .then(results => {
-        res.send({ daysleft: results[0].totalDifference,});
-    })
+    const restaurantId = req.params.restaurantId;
+    const date = Date.now();
+   
+    var expire;
+    Restaurant.findById(restaurantId)
+        .then(restaurant=>{
+            if(!restaurant){
+                const error = new Error('There are no such restaurantts !!!');
+                error.statusCode = 404;
+                return res.status(404).json({message:'There are no such restaurants!!'})
+            }
+            else{
+                expire=restaurant.expireAt;
+                result = expire - date;
+                result1 = result/(60*60*24*1000)
+                
+                return res.status(200).json({message:"The remaining days for this restaurant are..", daysleft:result1});
+            }
+        })
     .catch(error => console.error(error))
-
 }
 
 

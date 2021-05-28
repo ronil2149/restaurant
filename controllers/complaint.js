@@ -16,7 +16,7 @@ exports.MakeComplaint = (req,res,next)=>{
       return  Order.findById(orderId)
     })  
     .then(order => {
-       if (!orderId) {
+       if (!order) {
            const error = new Error('An order with this id could not be found');
            error.statusCode = 401;
            throw error;

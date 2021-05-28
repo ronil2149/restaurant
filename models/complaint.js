@@ -21,7 +21,11 @@ const complaintSchema = new Schema(
         replyId:[{
             type:Schema.Types.ObjectId,
             ref:'Reply'
-        }]
+        }],
+        status:{
+            type:String,
+            default:"Pending"
+        }
     }
 )
 
