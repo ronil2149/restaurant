@@ -134,7 +134,6 @@ exports.parcel = (req,res,next) =>{
   })
   .then(cart=>{
     cart.remove();
-    
   })
   .catch(err => {
     if (!err.statusCode) {
@@ -1516,3 +1515,64 @@ exports.OrderListByTable = (req,res,next) =>{
     next(err);
   });
 }
+
+
+exports.DonePayment = (req,res,next) =>{
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+  .then(order =>{
+    if(!order){
+      const error = new Error('There are no such orders!!');
+      error.statusCode = 404;
+      throw error;
+    }
+    else{
+      order.PaymentStatus = "Done";
+      order.save();
+      return res.status(200).json({message:"Payment's done!", result:order})
+    }
+  })
+  .catch(err => {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  });
+}
+
+exports.getParcelOrders = (req, res, next) => {
+  const CurrentPage = req.query.page || 1;
+  const perPage = 20;
+  let totalOrders;
+  Order.find().populate({
+    path: "items.product_id"
+  }).populate({
+    path: "items.ingredientId"
+  }).populate({
+    path: "items.categoryId"
+  })
+    .countDocuments()
+    .then(count => {
+      totalOrders = count;
+      return Order.find({orderType:'Parcel'}).populate({path:"items",populate:{
+        path: "product_id"
+      }
+    })
+        .skip((CurrentPage - 1) * perPage)
+        .limit(perPage)
+    })
+    .then(orders => {
+      res.status(200)
+        .json({
+          message: 'Fetched orders Successfully',
+          orders: orders,
+          totalOrders: totalOrders
+        });
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });  
+};

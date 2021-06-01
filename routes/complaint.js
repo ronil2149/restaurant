@@ -9,4 +9,6 @@ router.get('/complaints',ComplaintController.GetComplaints);
 
 router.get('/complaint/:complaintId',ComplaintController.GetOne);
 
+router.put('/delete/:complaintId',ComplaintController.DeleteComplaint);
+
 module.exports = router;

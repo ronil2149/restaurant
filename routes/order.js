@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.put('/makeorder',auth.auth,orderController.add);
 
-router.put('/parcelorder',auth.auth,orderController.add);
+router.put('/parcelorder',auth.auth,orderController.parcel);
 
 router.post('/waiter/makeorder',orderController.WaiterOrder);
 
@@ -53,5 +53,9 @@ router.delete('/delete',auth.auth,orderController.DeleteOrder);
 router.put('/setdiscount/:orderId',orderController.setDiscount);
 
 router.put('/serve/:orderId',orderController.ServeOrder);
+
+router.put('/donepayment/:orderId',orderController.DonePayment);
+
+router.get('/parcelorders',orderController.getParcelOrders);
 
 module.exports = router;

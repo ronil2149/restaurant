@@ -84,6 +84,10 @@ const OrderSchema = new Schema({
         type:String,
         default:'OnTable'
       },
+      PaymentStatus:{
+        type:String,
+        default:'Pending'
+      },
     userId:{
       type:Schema.Types.ObjectId,
       ref:'User'
