@@ -43,6 +43,48 @@ exports.MakeComplaint = (req,res,next)=>{
    })
 }
 
+exports.WaiterComplaint = (req,res,next)=>{
+  const title = req.body.title;
+  const phone = req.body.phone;
+  const message = req.body.message;
+    const orderId = req.params.orderId;
+    let loadedAll;
+    // let token = req.headers['authorization'];
+    // token = token.split(' ')[1];
+    All.findOne({phone})
+    .then(all=>{
+      // console.log(all);
+      loadedAll  = all;
+      return  Order.findById(orderId)
+    })  
+    .then(order => {
+       if (!order) {
+           const error = new Error('An order with this id could not be found');
+           error.statusCode = 401;
+           throw error;
+       } 
+       const complaint = new Complaint({
+           title: title,
+           message: message,
+           orderId:orderId,
+           userId:id
+       })
+       complaint.save();
+       order.complaints.push(complaint);
+       order.save();
+       loadedAll.complaints.push(complaint);
+       loadedAll.save();
+      //  console.log(loadedAll)
+       return res.status(200).json({message:'complaint saved!',complaint:complaint});
+   })
+   .catch(err => {
+       if (!err.statusCode) {
+           err.statusCode = 500;
+       }
+       next(err);
+   })
+}
+
 
 exports.GetComplaints = (req, res, next) => {
     const CurrentPage = req.query.page || 1;
