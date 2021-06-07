@@ -255,7 +255,7 @@ exports.DeleteReservation =  (req, res, next) => {
                         }
                         else {
                             if (result[0].waiting >= 0 && (result[0].Status == 'Checkin' || result[0].Status == 'Available')) {
-                                Table.updateOne({table:table},{$set:{waiting:result[0].waiting,Status:'Reserved',currentUser:id, userEmail: email , phone:phone}})
+                                Table.updateOne({table:table},{$set:{waiting:result[0].waiting,Status:'Reserved',currentUser:id, userEmail: email , phone:phone, userName:name}})
                                 .then(result =>
                                 {
                                 }).catch(err =>{ 
@@ -478,7 +478,7 @@ exports.CheckOut = function(req,res,next){
                     })
                 }
                 else {
-                    Table.updateOne({phone:phone},{$set:{Status:'Available',availableTime:null, currentUser:null , userEmail:null , phone:null , orders:[]}})
+                    Table.updateOne({phone:phone},{$set:{Status:'Available',availableTime:null, currentUser:null , userEmail:null, userName:null , phone:null , orders:[]}})
                     .then(result =>{
                         thanksUser(phone);
                         return res.status(200).json({

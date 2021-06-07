@@ -283,16 +283,28 @@ exports.deleteProduct = (req, res, next) => {
 exports.getMenuByCategoryId = (req, res, next)=> {
   const categoryId = req.params.categoryId;
   let loadedProduct;
+  let loadedcategory;
 
-  Product.find({categoryId})
+  Category.findById(categoryId)
+  .then(category=>{
+    if(!category){
+      const error = new Error('There are no such categories!!');
+      error.statusCode = 404 ;
+      throw error;
+    }
+    else{
+      loadedCategory = category;
+      return Product.find({categoryId}).populate('ingredients')
+    }
+  })
   .then(product => {
-    console.log(product);
+    // console.log(product);
     if (product) {
-      return res.status(200).json({ message: 'Here is your menu.', products: product });
+      return res.status(200).json({ message: 'Here is your menu.', products: product , category: loadedCategory});
 
     }
     else if (product.availability == 'available'){
-      return res.status(200).json({ message: 'Here is your menu.', product: product });
+      return res.status(200).json({ message: 'Here is your menu.', product: product , category: loadedCategory});
     }
     
     })    
