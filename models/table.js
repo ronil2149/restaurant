@@ -17,7 +17,8 @@ const tableSchema = new Schema({
     }],
     userEmail:String,
     phone:String,
-    userName:String
+    userName:String,
+    Persons:String
 
 });
 

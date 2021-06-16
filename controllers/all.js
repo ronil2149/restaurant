@@ -300,8 +300,9 @@ exports.getSomeone = (req,res,next) =>{
 
 exports.UpdateRole = (req,res,next) =>{
     const activerole = req.body.activerole;
-    let token = req.headers['authorization'];
-    token = token.split(' ')[1];
+    // let token = req.headers['authorization'];
+    // token = token.split(' ')[1];
+    const email = req.body.email;
     All.findOne({email})
     .then(all=>{
         if(!all){
