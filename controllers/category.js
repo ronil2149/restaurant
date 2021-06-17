@@ -8,11 +8,14 @@ exports.getCategories = (req, res, next) => {
     const CurrentPage = req.query.page || 1;
     const perPage = 10;
     let totalItems;
-    Category.find()
+    Category.find().populate('products')
       .countDocuments()
       .then(count => {
         totalItems = count;
-        return Category.find()
+        return Category.find().populate('products').populate({path:"products",populate:{
+          path: "ingredients"
+        }
+      })
           .skip((CurrentPage - 1) * perPage)
           .limit(perPage)
       })

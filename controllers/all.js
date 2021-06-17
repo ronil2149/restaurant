@@ -467,6 +467,7 @@ exports.ActivateSomeone = (req,res,next) =>{
 
 
 exports.UpdateSomeone = (req,res,next) =>{
+    const email = req.body.email;
     const allId = req.params.allId;
     const phone = req.body.phone;
     const name = req.body.name;
@@ -481,14 +482,14 @@ exports.UpdateSomeone = (req,res,next) =>{
             throw error;
         }
         else{
+            all.email = email;
             all.phone = phone;
-            all.categoryid = categoryId;
-            // all.name = name;
+            all.categoryId = categoryId;
+            all.name = name;
             all.save();
             return res.json({message:"Data of this person has been updated !", person:all})
         }
-    })
-    .catch(err => {
+    }).catch(err => {
         if (!err.statusCode) {
           err.statusCode = 500;
           return err;
