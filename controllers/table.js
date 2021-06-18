@@ -3,6 +3,7 @@ const Order = require('../models/order');
 const order = require('../models/order');
 const Table = require('../models/table');
 const QRCode = require('qr-image');
+const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const ObjectId = require('mongodb').ObjectID;
 var Jimp = require("jimp");
@@ -552,3 +553,83 @@ else{
 }
   }
   
+
+  exports.WaiterMakeResevation = function(req,res,next){
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        const error = new Error('Validation Failed!');
+        error.statusCode = 422;
+        error.data = errors.array();
+        return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added the right credentials?"})
+    }
+    const persons = req.body.persons;
+    const name = req.body.name;
+    const phone = req.body.phone;
+    // console.log(name);
+    Reservation.findOne({phone}).then(result=>{
+        if (!result){
+                const reservation = new Reservation({
+                phone:phone,
+                requestedtime:new Date(),
+                waitingtime:null,
+                checkintime:null,
+                checkouttime:null,
+                persons:persons,
+                name:name,
+                table:null,
+                Status:'Finished',
+            });
+            reservation.save()
+            .then(result => { 
+                res.status(201).json({
+                    message:"created successfully",
+                    createdTable:reservation,
+                   
+                });
+                newcustomer = reservation
+                })          
+        }
+        else {
+            res.status(500).json({error:'Reservation with this Number already exists!!!! Please use a different number'});
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+                err.statusCode = 500;
+                return res.status(500).json({message:"mmm...somthing seems wrong here!!  you sure,you added the right credentials?"})
+            }
+            next(err);
+        })
+ }
+ 
+ 
+  exports.WaiterBookTable = (req,res,next) =>{
+    const userEmail = req.body.email;
+    const table = req.body.table;
+    const userName = req.body.name;
+    const phone = req.body.phone;
+
+    Table.findOne({table:table})
+    .then(table =>{
+        if(!table){
+            const error = new Error('There are no such tables!!');
+            error.statusCode = 404;
+            throw error; 
+        }
+        else{
+            table.Status = "Reserved"
+            table.userEmail = userEmail;
+            table.phone = phone;
+            table.userName = userName;
+            table.save();
+            return res.json({message:"User got this table!" , table : table})
+        }
+    })
+    .catch(err => {
+        if (!err.statusCode) {
+          err.statusCode = 500;
+        }
+        next(err);
+      });
+  
+  }
